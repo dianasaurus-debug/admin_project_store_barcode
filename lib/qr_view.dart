@@ -36,7 +36,7 @@ class _QRViewExampleState extends State<QRViewExample> {
     return Scaffold(
       body: Column(
         children: <Widget>[
-          Expanded(flex: 4, child: _buildQrView(context)),
+          Expanded(flex: 4, child: _buildQrView(context)), //tampilan qr code
           Expanded(
             flex: 1,
             child: FittedBox(
@@ -117,7 +117,7 @@ class _QRViewExampleState extends State<QRViewExample> {
                 ],
               ),
             ),
-          )
+          ) //tampilan tombol bawah qr code
         ],
       ),
     );
@@ -144,7 +144,7 @@ class _QRViewExampleState extends State<QRViewExample> {
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
+  void _onQRViewCreated(QRViewController controller) { //saat qr view bisa nangkep codenya
     setState(() {
       this.controller = controller;
     });

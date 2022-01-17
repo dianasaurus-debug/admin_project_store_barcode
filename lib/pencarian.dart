@@ -67,7 +67,7 @@ class PencarianPageState extends State<PencarianPage> {
                           itemCount: snapshot.data!.length,
                           itemBuilder: (BuildContext context, int index) {
                             return Card(
-                                child: new Column(
+                                child: Column(
                                   children: <Widget>[
                                     new
                                 GestureDetector(
