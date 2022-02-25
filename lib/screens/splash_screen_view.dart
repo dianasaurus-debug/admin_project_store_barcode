@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:ghulam_app/pencarian.dart';
+import 'package:ghulam_app/screens/beranda.dart';
 import 'package:ghulam_app/utils/constants.dart';
-import 'package:ghulam_app/welcome.dart';
+import 'package:ghulam_app/screens/welcome.dart';
 
 class SplashScreenPage extends StatefulWidget{
   @override
@@ -22,7 +22,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
     return Timer(duration, (){
       Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_){
-            return WelcomePage();
+            return HomePage();
           })
       );
     });
@@ -38,7 +38,9 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Toko', style: TextStyle(color: kPrimaryColor),)
+                  Image.asset('images/logo.png', width: (1 / 2) * MediaQuery.of(context).size.width,),
+                  const SizedBox(height: 15),
+                  Text('BeShop', style: TextStyle(color: kPrimaryColor, fontSize: 30, fontWeight: FontWeight.bold),)
                 ],
               ),
             )

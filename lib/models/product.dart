@@ -8,11 +8,12 @@ class Product {
   late String stok;
   late int category_id;
   late String nama_kategori;
+  late int rating;
   late int id;
 
 
   Product({this.id = 0, this.nama_barang = '',this.harga_jual = '',this.qr_code = '', this.kode_barang = ''
-    ,this.deskripsi = '', this.gambar = '',this.stok = '',this.category_id = 0,this.nama_kategori = '',});
+    ,this.deskripsi = '', this.gambar = '',this.stok = '',this.category_id = 0,this.nama_kategori = '', this.rating = 0});
 
   Product.fromJson(Map<String, dynamic> json)
       : nama_barang = json['nama_barang'],
@@ -24,6 +25,7 @@ class Product {
         stok = json['stok'],
         category_id = json['category_id'],
         nama_kategori = json['category']['nama_kategori'],
+        rating = json['criterias'][1]['nilai'],
         qr_code = json['qr_code'];
 
   Map<String, dynamic> toJson() => {

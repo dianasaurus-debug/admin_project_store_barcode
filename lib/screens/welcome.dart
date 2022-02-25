@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
-import 'package:ghulam_app/login_index.dart';
-import 'package:ghulam_app/register_index.dart';
+import 'package:ghulam_app/screens/login_index.dart';
+import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 
 class WelcomePage extends StatelessWidget {

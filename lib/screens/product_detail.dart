@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
-import 'package:ghulam_app/daftar_favorit.dart';
-import 'package:ghulam_app/login_index.dart';
+import 'package:ghulam_app/screens/daftar_favorit.dart';
+import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/qr_view.dart';
-import 'package:ghulam_app/register_index.dart';
+import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/utils/size_config.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';

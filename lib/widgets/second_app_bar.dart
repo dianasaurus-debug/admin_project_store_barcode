@@ -9,13 +9,14 @@ import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 
 
-class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
+class SecondAppBar extends StatelessWidget implements PreferredSizeWidget {
   final AppBar appBar;
   final isAuth;
+  final title;
 
   /// you can add more fields that meet your needs
 
-  const BaseAppBar({Key? key, required this.appBar, required this.isAuth})
+  const SecondAppBar({Key? key, required this.appBar, required this.isAuth, required this.title})
       : super(key: key);
 
   @override
@@ -23,22 +24,13 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
         backgroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        title:
-        Container(
-          decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(20)),
-          child: TextFormField(
-            decoration: InputDecoration(
-              icon: Icon(CupertinoIcons.search, color: kPrimaryLightColor),
-              border: InputBorder.none,
-              hintText: 'Cari',
-              // contentPadding:
-              //     EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            ),
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: kPrimaryLightColor, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
         ),
+        elevation: 0,
+        centerTitle: true,
+        title:Text('${title}', style: TextStyle(color: Colors.black, fontSize : 20),),
         actions:  (isAuth ==false) ? [
         IconButton(
             icon: Icon(Icons.login,

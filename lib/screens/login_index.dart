@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:ghulam_app/pencarian.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
+import 'package:ghulam_app/screens/beranda.dart';
 import 'package:ghulam_app/utils/constants.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class LoginIndexPage extends StatefulWidget {
@@ -12,7 +16,10 @@ class LoginIndexPage extends StatefulWidget {
 }
 
 class _LoginIndexPageState extends State<LoginIndexPage> {
+  bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
+  var email;
+  var password;
 
   @override
   Widget build(BuildContext context) {
@@ -21,21 +28,20 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
       onPrimary: Colors.white,
       primary: kPrimaryColor,
       padding: EdgeInsets.fromLTRB(0, 15, 0, 15),
-
+      shape: new RoundedRectangleBorder(
+        borderRadius: new BorderRadius.circular(30.0),
+      ),
     );
     return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.clear, color: Colors.grey, size: 40),
+            icon: Icon(Icons.clear, color: kPrimaryLightColor, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          centerTitle: true,
-          title: Text('Login', style: TextStyle(color: Colors.black, fontSize : 20),),
           elevation: 0,
           backgroundColor: Color(0xffffffff),
         ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.only(top : 15),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -47,31 +53,46 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>
                       [
-                        const SizedBox(height: 40),
+                        SizedBox(
+                          width: (280 / 375) * MediaQuery.of(context).size.width,
+                          child: AspectRatio(
+                            aspectRatio: 1.5,
+                            child: Image.asset('images/signin.png'),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                              'Login',
+                              textAlign: TextAlign.left,
+                              style: TextStyle(fontWeight: FontWeight.w700, color: kPrimaryColor, fontSize: 30)
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                         Form(
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
-                              Text('E-Mail',
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
-                                      color: Colors.black,
-                                      fontFamily: 'Roboto')
-                              ),
-                              const SizedBox(height: 5),
                               TextFormField(
+
                                 // The validator receives the text that the user has entered.
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'E-Mail tidak boleh kosong';
                                   }
+                                  email = value;
+
                                   return null;
                                 },
                                 keyboardType: TextInputType.emailAddress,
                                 decoration: InputDecoration(
+                                    icon: Icon(Icons.email),
+                                    suffixIcon: InkWell(
+                                        child: Icon(Icons.clear, size: 14), onTap: () {
+                                        email = '';
+                                    }),
                                   focusedBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(color: kPrimaryLightColor, width: 2),
                                   ),
@@ -84,31 +105,28 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                                   focusedErrorBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(color: Colors.red, width: 2),
                                   ),
-                                  hintText: 'Masukkan E-Mail',
+                                  hintText: 'E-Mail',
                                 ),
 
                               ),
-                              const SizedBox(height: 30),
-                              Text('Password',
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
-                                      color: Colors.black,
-                                      fontFamily: 'Roboto')
-                              ),
-                              const SizedBox(height: 5),
+                              const SizedBox(height: 15),
                               TextFormField(
                                 // The validator receives the text that the user has entered.
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Password tidak boleh kosong';
                                   }
+                                    password = value;
                                   return null;
                                 },
                                 keyboardType: TextInputType.text,
                                 obscureText: true,
                                 decoration: InputDecoration(
+                                  icon: Icon(Icons.lock),
+                                  suffixIcon: InkWell(
+                                      child: Icon(Icons.clear, size: 14), onTap: () {
+                                      password = '';
+                                  }),
                                   focusedBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(color: kPrimaryLightColor, width: 2),
                                   ),
@@ -121,11 +139,26 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                                   focusedErrorBorder: UnderlineInputBorder(
                                     borderSide: BorderSide(color: Colors.red, width: 2),
                                   ),
-                                  hintText: 'Masukkan Password',
+                                  hintText: 'Password',
                                 ),
 
                               ),
-                              const SizedBox(height: 30),
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    textStyle: const TextStyle(fontSize: 20),
+                                  ),
+                                  onPressed: () {},
+                                  child: const Text(
+                                      'Lupa Password?',
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor, fontSize: 16)
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
                               ElevatedButton(
                                 style: styleButton,
                                 onPressed: () {
@@ -133,13 +166,14 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                                   if (_formKey.currentState!.validate()) {
                                     // If the form is valid, display a snackbar. In the real world,
                                     // you'd often call a server or save the information in a database.
-                                    Route route = MaterialPageRoute(
-                                        builder: (context) => PencarianPage());
-                                    Navigator.push(context, route);
+                                    _login();
                                   }
                                 },
-                                child: Text('Login', style : TextStyle()),
+                                child: Text(
+                                    _isLoading? 'Memuat...' : 'Login',
+                                    style : TextStyle(fontSize : 16)),
                               ),
+
                             ],
                           ),
                         ),
@@ -154,18 +188,56 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 25),
 
-                        Text(
-                            'Lupa Password',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor, fontSize: 18)
-                        )
                       ]
                   )
               )
             ],
           ),
         ));
+  }
+  void _login() async{
+    setState(() {
+      _isLoading = true;
+    });
+    var data = {
+      'email' : email,
+      'password' : password,
+    };
+
+    var res = await AuthController().authData(data, '/login');
+    var body = json.decode(res.body);
+    if(body['success']){
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      localStorage.setString('token', json.encode(body['access_token'])); //Simpan token di local storage
+      localStorage.setString('user', json.encode(body['data']));
+      Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => HomePage()
+        ),
+      );
+    }else{
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal Login!",
+        desc: "Pastikan E-Mail dan password benar.",
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+    setState(() {
+      _isLoading = false;
+    });
+
   }
 }
