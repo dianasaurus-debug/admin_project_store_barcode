@@ -27,7 +27,7 @@ class GridProduct extends StatelessWidget {
             child: Image.network(IMG_URL + product.gambar),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 10),
+            padding: EdgeInsets.all(MediaQuery.of(context).size.height*(0.01)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[

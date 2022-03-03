@@ -263,7 +263,6 @@ class _RegisterIndexPageState extends State<RegisterIndexPage> {
     var firstName = parts[0];
     parts.removeAt(0);
     lastName = parts.join(" ");
-    print(parts);
     var data = {};
     if(lastName!=''){
       data = {

@@ -165,8 +165,8 @@ class DetailPageState extends State<DetailPage> {
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    totalBayar!=0?totalBayar-=int.parse(widget.product!.harga_jual):totalBayar=0;
                                     _jumlahBarang--;
+                                    totalBayar!=0?totalBayar-=int.parse(widget.product!.harga_jual):totalBayar=0;
                                   });
                                 },
                               ),
@@ -191,8 +191,8 @@ class DetailPageState extends State<DetailPage> {
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    totalBayar+=int.parse(widget.product!.harga_jual);
                                     _jumlahBarang++;
+                                    totalBayar+=int.parse(widget.product!.harga_jual);
                                   });
                                 },
                               ),
@@ -280,53 +280,11 @@ class DetailPageState extends State<DetailPage> {
                               fontSize: 18,
                               color: Colors.black,
                               fontWeight: FontWeight.bold)),
-                      Row(
-                        children : [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shadowColor: Colors.transparent,
-                              primary: Colors.grey[200],
-                              shape: CircleBorder(),
-                              padding: EdgeInsets.all(5),
-                            ),
-                            child: Icon(
-                              CupertinoIcons.minus,
-                              size: 15,
-                              color: kPrimaryLightColor,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _jumlahBarang--;
-                              });
-                            },
-                          ),
-                          Text(
-                            '${_jumlahBarang}',
-                            style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold)
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              shadowColor: Colors.transparent,
-                              primary: Colors.grey[200],
-                              shape: CircleBorder(),
-                              padding: EdgeInsets.all(5),
-                            ),
-                            child: Icon(
-                              CupertinoIcons.add,
-                              size: 15,
-                              color: kPrimaryLightColor,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _jumlahBarang++;
-                              });
-                            },
-                          ),
-                        ]
-                      )
+                      Text('${_jumlahBarang}',
+                          style: TextStyle(
+                              fontSize: 18,
+                              color: kPrimaryColor,
+                              fontWeight: FontWeight.bold))
                     ]
                 ),
                 SizedBox(
@@ -344,7 +302,7 @@ class DetailPageState extends State<DetailPage> {
                               fontSize: 18,
                               color: Colors.black,
                               fontWeight: FontWeight.bold)),
-                      Text('Rp 10000',
+                      Text('Rp ${totalBayar}',
                           style: TextStyle(
                               fontSize: 18,
                               color: Colors.red,

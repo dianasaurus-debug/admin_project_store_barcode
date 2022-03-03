@@ -5,9 +5,9 @@ import 'package:ghulam_app/models/category.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:http/http.dart' as http;
 
-class ProductNetwork {
-  Future<List<Category>> getProducts() async {
-    var full_url = API_URL+'/categories';
+class CategoryNetwork {
+  Future<List<Category>> getCategories() async {
+    var full_url = API_URL+'/products/categories';
     final res = await http.get(Uri.parse(full_url));
     if (res.statusCode == 200) {
       var json = jsonDecode(res.body);

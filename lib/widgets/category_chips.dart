@@ -15,9 +15,9 @@ class chipWidget extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Container(
-      margin: EdgeInsets.all(6.0),
+      margin: EdgeInsets.only(left:7.0),
       child: Chip(
-        labelPadding: EdgeInsets.all(5.0),
+        labelPadding: EdgeInsets.all(0.0),
         label: Text(
           label,
           style: TextStyle(

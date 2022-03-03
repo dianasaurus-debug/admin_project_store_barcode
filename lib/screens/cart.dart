@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/screens/detail_screen.dart';
@@ -85,7 +86,58 @@ class CartPageState extends State<CartPage> {
                             child: Image.network(IMG_URL + snapshot.data![index].gambar)
                           ),
                         ),
-                        trailing: Icon(Icons.star));
+                        trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment:MainAxisAlignment.center,
+                            children : [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  shadowColor: Colors.transparent,
+                                  primary: Colors.grey[200],
+                                  shape: CircleBorder(),
+                                  minimumSize: Size.zero, // Set this
+                                  padding: EdgeInsets.all(3), // and this
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.minus,
+                                  size: 12,
+                                  color: kPrimaryLightColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    // _jumlahBarang--;
+                                  });
+                                },
+                              ),
+                              Text(
+                                  '5',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold)
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  shadowColor: Colors.transparent,
+                                  primary: Colors.grey[200],
+                                  shape: CircleBorder(),
+                                  minimumSize: Size.zero, // Set this
+                                  padding: EdgeInsets.all(3), // and this
+                                ),
+                                child: Icon(
+                                  CupertinoIcons.add,
+                                  size: 12,
+                                  color: kPrimaryLightColor,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    // _jumlahBarang++;
+                                  });
+                                },
+                              ),
+                            ]
+                        )
+                    );
                   }
               );
             } else if (snapshot.hasError) {
