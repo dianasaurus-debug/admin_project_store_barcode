@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ghulam_app/models/rekomendasi.dart';
 
-const API_URL = 'http://192.168.43.204:8000/api';
-const IMG_URL = 'http://192.168.43.204:8000/img/';
+const API_URL = 'http://192.168.129.26:8000/api';
+const IMG_URL = 'http://192.168.129.26:8000/img/';
 
 const kPrimaryColor = Color(0xFF194739);
 const kPrimaryLightColor = Color(0xFF2db861);
@@ -12,3 +13,11 @@ const kPrimaryGradientColor = LinearGradient(
 );
 const kSecondaryColor = Color(0xFFacc0c0);
 const kTextColor = Color(0xFFd0e2e3);
+List<Rekomendasi> list_label_bobot = [
+  Rekomendasi('Tidak Penting', 1),
+  Rekomendasi('Kurang Penting', 2),
+  Rekomendasi('Cukup Penting', 3),
+  Rekomendasi('Penting', 4),
+  Rekomendasi('Sangat Penting', 5),
+
+];

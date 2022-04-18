@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/screens/beranda.dart';
+import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -162,10 +164,7 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                               ElevatedButton(
                                 style: styleButton,
                                 onPressed: () {
-                                  // Validate returns true if the form is valid, or false otherwise.
                                   if (_formKey.currentState!.validate()) {
-                                    // If the form is valid, display a snackbar. In the real world,
-                                    // you'd often call a server or save the information in a database.
                                     _login();
                                   }
                                 },
@@ -183,8 +182,16 @@ class _LoginIndexPageState extends State<LoginIndexPage> {
                           text: TextSpan(
                             text: 'Belum punya akun? ',
                             style: TextStyle(color: Colors.black, fontSize: 15),
-                            children: const <TextSpan>[
-                              TextSpan(text: 'Daftar sekarang', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor, fontSize: 15)),
+                            children: <TextSpan>[
+                              TextSpan(text: 'Daftar sekarang',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor, fontSize: 15),
+                                recognizer: TapGestureRecognizer()..onTap = () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => RegisterIndexPage()),
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         ),

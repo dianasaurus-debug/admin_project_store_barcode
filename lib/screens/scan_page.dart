@@ -21,7 +21,8 @@ class _ScanPageState extends State<ScanPage> {
   Barcode? result;
   QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  var array_of_kode_barang = [];
   // In order to get hot reload to work we need to pause the camera if the platform
   // is android, or resume the camera if the platform is iOS.
   @override
@@ -35,6 +36,7 @@ class _ScanPageState extends State<ScanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.clear, color: Colors.grey, size: 40),
@@ -99,11 +101,11 @@ class _ScanPageState extends State<ScanPage> {
                         shape: new RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(30.0),
                         ),
-                        padding: EdgeInsets.all(15),
+                        padding: EdgeInsets.all(8),
                       ),
                       child: Text('Daftar Barang',
                           style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)))
+                              fontSize: 15, fontWeight: FontWeight.bold)))
                 ],
               ),
           ) //tampilan tombol bawah qr code
@@ -142,20 +144,24 @@ class _ScanPageState extends State<ScanPage> {
         result = scanData;
       });
       if(result!=null){
-          controller.pauseCamera();
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => CartPage(),
-          ));
-        // if(widget.kodeBarang!=result!.code){
-        //   controller.pauseCamera();
-        //   showAlertDialog(context);
-        // } else {
+        setState(() {
+          array_of_kode_barang.add(result);
+        });
         //   controller.pauseCamera();
         //   Navigator.of(context).push(MaterialPageRoute(
-        //     builder: (context) => ProductDetail(kodeBarang : result!.code),
+        //     builder: (context) => CartPage(),
         //   ));
-        // }
-
+        // // if(widget.kodeBarang!=result!.code){
+        // //   controller.pauseCamera();
+        // //   showAlertDialog(context);
+        // // } else {
+        // //   controller.pauseCamera();
+        // //   Navigator.of(context).push(MaterialPageRoute(
+        // //     builder: (context) => ProductDetail(kodeBarang : result!.code),
+        // //   ));
+        // // }
+        showSnackBar('Barang berhasil ditambahkan ke daftar!');
+        print(array_of_kode_barang);
       }
     });
   }
@@ -170,7 +176,6 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   showAlertDialog(BuildContext context) {
-
     // set up the button
     Widget okButton = TextButton(
       child: Text("OK"),
@@ -197,6 +202,17 @@ class _ScanPageState extends State<ScanPage> {
       },
     );
   }
+
+  void showSnackBar(message) {
+    final snackBarContent = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      content: Text("${message}"),
+      action: SnackBarAction(
+          label: 'Tutup', onPressed: _scaffoldKey.currentState!.hideCurrentSnackBar),
+    );
+    _scaffoldKey.currentState!.showSnackBar(snackBarContent);
+  }
+
 
   @override
   void dispose() {

@@ -32,7 +32,11 @@ class GridProduct extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text('${product.nama_barang}',
-                    style: TextStyle(fontSize: 16, color: kPrimaryColor, fontWeight: FontWeight.w900)),
+                  maxLines: 1,
+                  softWrap: false,
+                    style: TextStyle(fontSize: 16, color: kPrimaryColor, fontWeight: FontWeight.w900),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 5.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

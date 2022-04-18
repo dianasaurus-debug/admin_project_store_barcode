@@ -19,6 +19,8 @@ class DetailPage extends StatefulWidget {
 
 class DetailPageState extends State<DetailPage> {
   final _formKey = GlobalKey<FormState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   var isPressed = false;
   int _jumlahBarang = 0;
   int totalBayar = 0;
@@ -36,6 +38,7 @@ class DetailPageState extends State<DetailPage> {
     final formatCurrency =
         new NumberFormat.simpleCurrency(locale: 'id_ID', decimalDigits: 0);
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         leading: IconButton(
           icon:
@@ -235,16 +238,18 @@ class DetailPageState extends State<DetailPage> {
                     size: 30,
                     color: kPrimaryLightColor,
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    showSnackBar('Barang berhasil dimasukkan cart!');
+                  },
                 ),
                 SizedBox(width: 15),
                 Expanded(
                     child: ElevatedButton(
                         onPressed: () {
-                          _showModalBottomSheet();
+                          totalBayar>0 ? _showModalBottomSheet() : null;
                         },
                         style: ElevatedButton.styleFrom(
-                          primary: kPrimaryLightColor,
+                          primary: totalBayar>0 ? kPrimaryLightColor : Colors.grey,
                           shape: new RoundedRectangleBorder(
                             borderRadius: new BorderRadius.circular(30.0),
                           ),
@@ -317,7 +322,7 @@ class DetailPageState extends State<DetailPage> {
                     Expanded(
                         child: ElevatedButton(
                             onPressed: () {
-                              _showModalBottomSheet();
+                              totalBayar>0 ? _showModalBottomSheet() : null;
                             },
                             style: ElevatedButton.styleFrom(
                               primary: kPrimaryLightColor,
@@ -336,5 +341,14 @@ class DetailPageState extends State<DetailPage> {
             )
           );
         });
+  }
+  void showSnackBar(message) {
+    final snackBarContent = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      content: Text("${message}"),
+      action: SnackBarAction(
+          label: 'Tutup', onPressed: _scaffoldKey.currentState!.hideCurrentSnackBar),
+    );
+    _scaffoldKey.currentState!.showSnackBar(snackBarContent);
   }
 }

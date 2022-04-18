@@ -24,7 +24,7 @@ class Product {
         gambar = json['gambar'],
         stok = json['stok'],
         category_id = json['category_id'],
-        nama_kategori = json['category']['nama_kategori'],
+        nama_kategori = json['category'] == null ? null : json['category']['nama_kategori'],
         rating = json['criterias'][1]['nilai'],
         qr_code = json['qr_code'];
 

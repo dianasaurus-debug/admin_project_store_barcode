@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/screens/beranda.dart';
@@ -22,6 +23,8 @@ class InputOTP extends StatefulWidget {
 
 class _InputOTPState extends State<InputOTP> {
   final _formKey = GlobalKey<FormState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   bool _isLoading = false;
   var kode_otp;
   final ButtonStyle styleButton = ElevatedButton.styleFrom(
@@ -36,6 +39,7 @@ class _InputOTPState extends State<InputOTP> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           automaticallyImplyLeading: false,
           elevation: 0,
@@ -140,10 +144,20 @@ class _InputOTPState extends State<InputOTP> {
                           text: TextSpan(
                             text: 'Kode OTP akan bertahan selama ',
                             style: TextStyle(color: Colors.black, fontSize: 15),
-                            children: const <TextSpan>[
+                            children: <TextSpan>[
                               TextSpan(text: '10 menit', style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor, fontSize: 15)),
                             ],
                           ),
+                        ),
+                        Align (
+                          alignment : Alignment.topLeft,
+                          child : TextButton(
+                            child : Text(_isLoading==false ? 'Resend token' : 'Mengirim...',
+                                style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryLightColor, fontSize: 18)),
+                            onPressed: (){
+                              _resendOTP();
+                            },
+                          )
                         ),
 
                       ]
@@ -198,5 +212,52 @@ class _InputOTPState extends State<InputOTP> {
     });
 
   }
+  void _resendOTP() async{
+    setState(() {
+      _isLoading = true;
+    });
+    var data = {
+      'email' : widget.email,
+    };
 
+    var res = await AuthController().putData(data, '/resend/otp');
+    var body = json.decode(res.body);
+    print(body);
+    if(body['success']){
+      setState(() {
+        _isLoading = false;
+      });
+      showSnackBar('OTP berhasil dikirimkan!');
+    }else{
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal Resend!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+    setState(() {
+      _isLoading = false;
+    });
+
+  }
+  void showSnackBar(message) {
+    final snackBarContent = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      content: Text("${message}"),
+      action: SnackBarAction(
+          label: 'Tutup', onPressed: _scaffoldKey.currentState!.hideCurrentSnackBar),
+    );
+    _scaffoldKey.currentState!.showSnackBar(snackBarContent);
+  }
 }

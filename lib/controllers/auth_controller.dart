@@ -22,15 +22,17 @@ class AuthController {
     if (res.statusCode == 200) {
       var json = jsonDecode(res.body);
       var data = json['data'];
+      print(json);
       return new User.fromJson(data);
     } else {
-      throw Exception('Failed to fetch data');
+      throw Exception(res.body);
     }
   }
 
   postData(data, apiUrl) async {
     var fullUrl = API_URL + apiUrl;
     await _getToken();
+    print(token);
     return await http.post(
         Uri.parse(fullUrl),
         body: jsonEncode(data),

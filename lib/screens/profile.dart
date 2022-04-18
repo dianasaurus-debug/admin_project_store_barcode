@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
+import 'package:ghulam_app/models/user.dart';
 import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
@@ -83,12 +84,14 @@ class _ProfilePageState extends State<ProfilePage> {
         trailing:
         Icon(Icons.keyboard_arrow_right, color: kPrimaryLightColor, size: 30.0)),
   ];
-
+  late Future<User> futureDetailUser;
 
   @override
   void initState() {
     // TODO: implement initState
     _checkIfLoggedIn();
+    futureDetailUser = AuthController().getProfile();
+
   }
   @override
   Widget build(BuildContext context) {
@@ -98,134 +101,146 @@ class _ProfilePageState extends State<ProfilePage> {
           isAuth: authAppBar,
           title: 'Profil',
       ),
-        body:
-        isAuth != 2 ? (isAuth==1 ? SingleChildScrollView(
-          padding: EdgeInsets.only(top : 15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                  padding: const EdgeInsets.only(left: 30, right: 30, bottom : 15),
-                  child: Column(
-                      children : [
-                        Row(
+        body: isAuth != 2 ? (isAuth==1 ?
+        FutureBuilder<User>(
+          future: futureDetailUser,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.only(top : 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                        padding: const EdgeInsets.only(left: 30, right: 30, bottom : 15),
+                        child: Column(
                             children : [
-                              CircleAvatar(
-                                radius: 43,
-                                backgroundColor: kPrimaryLightColor,
-                                child: CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage: AssetImage('images/sample_pic.jpg'),
-                                ),
-                              ),
-                              const SizedBox(width: 15),
-                              Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                   children : [
-                                    Text(
-                                        'Dewi Ayu',
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(fontWeight: FontWeight.w700, color: kPrimaryColor, fontSize: 18)
+                                    CircleAvatar(
+                                      radius: 43,
+                                      backgroundColor: kPrimaryLightColor,
+                                      child: CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage: AssetImage('images/sample_pic.jpg'),
+                                      ),
                                     ),
-                                    const SizedBox(height: 5),
-                                    Row(
+                                    const SizedBox(width: 15),
+                                    Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children : [
-                                          Icon(Icons.email),
-                                          const SizedBox(width: 3),
                                           Text(
-                                            'dewi@gmail.com',
-                                            style: TextStyle(
-                                                color: kPrimaryColor,
-                                                fontWeight: FontWeight.bold
-                                            ),
+                                              'Hello, ${snapshot.data!.first_name}',
+                                              textAlign: TextAlign.left,
+                                              style: TextStyle(fontWeight: FontWeight.w700, color: kPrimaryColor, fontSize: 18)
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Row(
+                                              children : [
+                                                Icon(Icons.email),
+                                                const SizedBox(width: 3),
+                                                Text(
+                                                  '${snapshot.data!.email}',
+                                                  style: TextStyle(
+                                                      color: kPrimaryColor,
+                                                      fontWeight: FontWeight.bold
+                                                  ),
+                                                ),
+                                              ]
                                           ),
                                         ]
-                                    ),
+                                    )
                                   ]
-                              )
+                              ),
                             ]
+                        )
+                    ),
+                    Container(
+                        padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                        alignment: Alignment.centerLeft,
+                        margin: EdgeInsets.only(top: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(30), topLeft: Radius.circular(30)),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                blurRadius: 0.5,
+                                spreadRadius: 0.1,
+                                offset: Offset(0.0, -3))
+                          ],
                         ),
-                      ]
-                  )
-              ),
-              Container(
-                  padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
-                  alignment: Alignment.centerLeft,
-                  margin: EdgeInsets.only(top: 15),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(30), topLeft: Radius.circular(30)),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
-                          blurRadius: 0.5,
-                          spreadRadius: 0.1,
-                          offset: Offset(0.0, -3))
-                    ],
-                  ),
-                  child:
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(
-                        mainAxisAlignment : MainAxisAlignment.spaceBetween,
-                        children : [
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                WidgetSpan(
-                                  child: Icon(Icons.monetization_on_rounded, size: 25, color : kPrimaryLightColor),
+                        child:
+                        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Row(
+                              mainAxisAlignment : MainAxisAlignment.spaceBetween,
+                              children : [
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      WidgetSpan(
+                                        child: Icon(Icons.monetization_on_rounded, size: 25, color : kPrimaryLightColor),
+                                      ),
+                                      TextSpan(
+                                          text: snapshot.data!.saldo!=null ? 'Rp. ${snapshot.data!.saldo!.jumlah}' : 'Belum isi saldo',
+                                          style: TextStyle(color: Colors.black54, fontSize : 17)
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                TextSpan(
-                                    text: " Rp. 40.000",
-                                    style: TextStyle(color: Colors.black54, fontSize : 17)
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: "Detail saldo ",
+                                          style: TextStyle(color: Colors.grey, fontSize : 15)
+                                      ),
+                                      WidgetSpan(
+                                        child: Icon(Icons.arrow_forward_ios_rounded, size: 13, color : Colors.grey),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ],
-                            ),
+
+
+                              ]
                           ),
-                          RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                    text: "Detail saldo ",
-                                    style: TextStyle(color: Colors.grey, fontSize : 15)
-                                ),
-                                WidgetSpan(
-                                  child: Icon(Icons.arrow_forward_ios_rounded, size: 13, color : Colors.grey),
-                                ),
-
-                              ],
-                            ),
+                          SizedBox(
+                              height : 10
                           ),
-
-
-                        ]
-                    ),
-                    SizedBox(
-                        height : 10
-                    ),
-                    ListView.separated(
-                        itemCount: listMenu.length,
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          return
-                            GestureDetector(
-                                onTap: () {
-                                  logout();
-                                },
-                                child:listMenu[index]
-                            );
-                        },
-                        // The separators
-                        separatorBuilder: (context, index) {
-                          return Divider(
-                            color: kPrimaryLightColor,
-                          );
-                        }),
-                  ]))
-            ],
-          ),
+                          ListView.separated(
+                              itemCount: listMenu.length,
+                              shrinkWrap: true,
+                              itemBuilder: (context, index) {
+                                return
+                                  GestureDetector(
+                                      onTap: () {
+                                        logout();
+                                      },
+                                      child:listMenu[index]
+                                  );
+                              },
+                              // The separators
+                              separatorBuilder: (context, index) {
+                                return Divider(
+                                  color: kPrimaryLightColor,
+                                );
+                              }),
+                        ]))
+                  ],
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+            // By default, show a loading spinner.
+            return Center(
+                child: CircularProgressIndicator(backgroundColor: Colors.green,));
+          },
         )
+
             : Center(child: Padding(
             padding : EdgeInsets.all(20),
             child: Column(
