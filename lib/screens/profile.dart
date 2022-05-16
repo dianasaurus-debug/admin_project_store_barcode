@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _checkIfLoggedIn() async{
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
+
     if(token != null){
       setState(() {
         isAuth = 1;
@@ -240,7 +241,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: CircularProgressIndicator(backgroundColor: Colors.green,));
           },
         )
-
             : Center(child: Padding(
             padding : EdgeInsets.all(20),
             child: Column(

@@ -44,19 +44,19 @@ class BottomNavbar extends StatelessWidget {
       },
       items: [
         BottomNavigationBarItem(
-          title: Text('Home'),
+          label: 'Home',
           icon: Icon(Icons.home, size: 25),
         ),
         BottomNavigationBarItem(
-          title: Text('Scan'),
+          label: 'Scan',
           icon: Icon(Icons.qr_code_scanner,  size: 25),
         ),
         BottomNavigationBarItem(
-          title: Text('Histori'),
+          label: 'Histori',
           icon: Icon(Icons.calendar_today_sharp,  size: 25),
         ),
         BottomNavigationBarItem(
-          title: Text('Profil'),
+          label: 'Profil',
           icon: Icon(Icons.person_outline_outlined,  size: 25),
         ),
       ],

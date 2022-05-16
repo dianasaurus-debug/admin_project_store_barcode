@@ -1,67 +1,55 @@
-import 'dart:async';
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/category_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
+import 'package:ghulam_app/models/cart.dart';
 import 'package:ghulam_app/models/category.dart';
 import 'package:ghulam_app/models/parameter.dart';
 import 'package:ghulam_app/models/sub_category.dart';
 import 'package:ghulam_app/screens/detail_screen.dart';
+import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/models/product.dart';
+import 'package:ghulam_app/qr_view.dart';
 import 'package:ghulam_app/screens/recommendations.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/app_bar.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
-import 'package:ghulam_app/widgets/category_chips.dart';
-import 'package:ghulam_app/widgets/grid_product.dart';
+import 'package:ghulam_app/widgets/second_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:intl/intl.dart';
+import 'package:intl/intl.dart';
 
-class HomePage extends StatefulWidget {
+
+class CartRecommendationPage extends StatefulWidget {
   @override
-  State<StatefulWidget> createState() => new HomePageState();
+  State<StatefulWidget> createState() => new CartRecommendationPageState();
 }
 
-class Debouncer {
-  int? milliseconds;
-  VoidCallback? action;
-  Timer? timer;
-
-  run(VoidCallback action) {
-    if (null != timer) {
-      timer!.cancel();
-    }
-    timer = Timer(
-      Duration(milliseconds: Duration.millisecondsPerSecond),
-      action,
-    );
-  }
-}
-
-class HomePageState extends State<HomePage> {
-  // final formatCurrency = new NumberFormat.simpleCurrency(locale: 'id_ID');
-  late Future<List<Product>> futureListProduct;
+class CartRecommendationPageState extends State<CartRecommendationPage> {
+  final formatCurrency = new NumberFormat.simpleCurrency(locale: 'id_ID');
+  late Future<List<Cart>> futureListProduct;
   late Future<List<Category>> futureListCategory;
   late Future<List<Category>> futureListCategoryNew;
-
-  bool isAuth = false;
-  var idSelected = 0;
-  List<Product> usedProducts = [];
-  List<Category> usedCategory = [];
-  final _debouncer = Debouncer();
   var rekomenHarga = 1;
   var rekomenRating = 1;
   var rekomenSupplier = 1;
   Category rekomenKategori = Category( '', 0);
   var rekomenSubKategori = 1;
   var _isLoading = false;
-
-  void _checkIfLoggedIn() async {
+  int isAuth = 2;
+  var jumlah_barang = [];
+  bool authAppBar = false;
+  void _checkIfLoggedIn() async{
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
-    if (token != null) {
+    if(token != null){
       setState(() {
-        isAuth = true;
+        isAuth = 1;
+        authAppBar = true;
+      });
+    } else {
+      setState(() {
+        isAuth = 0;
+        authAppBar = false;
       });
     }
   }
@@ -70,14 +58,11 @@ class HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     _checkIfLoggedIn();
+    futureListProduct = ProductNetwork().getFromCarts();
     futureListCategory = CategoryNetwork().getCategories();
     futureListCategoryNew = CategoryNetwork().getCategories();
-    futureListProduct = ProductNetwork().getProducts();
   }
-  Future<List<Product>> _refreshProducts(BuildContext context) async {
-    futureListProduct = ProductNetwork().getProducts();
-    return futureListProduct;
-  }
+
   Widget build(BuildContext context) {
     final ButtonStyle styleButton = ElevatedButton.styleFrom(
       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -86,55 +71,116 @@ class HomePageState extends State<HomePage> {
       primary: kPrimaryColor,
     );
     return Scaffold(
-      appBar: BaseAppBar(appBar: AppBar(), isAuth: isAuth),
-      body:
-          RefreshIndicator(
-              color: Colors.white,
-              backgroundColor: kPrimaryColor,
-            onRefresh: () => _refreshProducts(context),
-            child:
-            Stack(
-              children: <Widget>[ListView(), SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(15, 15, 15, 15),
-                  child:FutureBuilder<List<Product>>(
-                      future: futureListProduct,
-                      builder: (context, products) {
-                        if (products.hasData) {
-                          WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
-                            ///This schedules the callback to be executed in the next frame
-                            /// thus avoiding calling setState during build
-                            setState(() {
-                              if (idSelected == 0) {
-                                usedProducts = products.data!;
-                              }
-                            });
-                          });
-                          return Column(children: [
+      appBar: SecondAppBar(
+        appBar: AppBar(),
+        isAuth: authAppBar,
+        title: 'Keranjang',
+      ),
+      body: FutureBuilder<List<Cart>>(
+          future: futureListProduct,
+          builder: (context, snapshot) {
+
+            if (snapshot.hasData) {
+              WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+                ///This schedules the callback to be executed in the next frame
+                /// thus avoiding calling setState during build
+                for(var i=0;i<snapshot.data!.length;i++){
+                  setState(() {
+                    jumlah_barang.add(snapshot.data![i].jumlah);
+                  });
+                }
+              });
+              if(jumlah_barang.length!=0){
+                return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children : [
+                    ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ListTile(title: Text('${snapshot.data![index].product!.nama_barang}', style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: kPrimaryColor,
+                              fontSize: 15)),
+                              subtitle: Text(
+                                  '${formatCurrency.format(int.parse(snapshot.data![index].product!.harga_jual))}',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500)),
+                              leading: AspectRatio(
+                                aspectRatio: 1.5,
+                                child: Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15.0),
+                                    ),
+                                    child: Image.network(IMG_URL + snapshot.data![index].product!.gambar)
+                                ),
+                              ),
+                              trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment:MainAxisAlignment.center,
+                                  children : [
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        shadowColor: Colors.transparent,
+                                        primary: Colors.grey[200],
+                                        shape: CircleBorder(),
+                                        minimumSize: Size.zero, // Set this
+                                        padding: EdgeInsets.all(3), // and this
+                                      ),
+                                      child: Icon(
+                                        CupertinoIcons.minus,
+                                        size: 12,
+                                        color: kPrimaryLightColor,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          jumlah_barang[index] = jumlah_barang[index]-1;
+                                        });
+                                      },
+                                    ),
+                                    Text(
+                                        '${jumlah_barang[index]}',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold)
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        shadowColor: Colors.transparent,
+                                        primary: Colors.grey[200],
+                                        shape: CircleBorder(),
+                                        minimumSize: Size.zero, // Set this
+                                        padding: EdgeInsets.all(3), // and this
+                                      ),
+                                      child: Icon(
+                                        CupertinoIcons.add,
+                                        size: 12,
+                                        color: kPrimaryLightColor,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          jumlah_barang[index] = jumlah_barang[index]+1;
+                                        });
+                                      },
+                                    ),
+                                  ]
+                              )
+                          );
+                        }
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children : [
+                            Text('Apakah ingin kami rekomendasikan lagi?'),
                             Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Align(
-                                      child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Daftar Produk',
-                                                style: TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold)),
-                                            Text('Produk murah dan berkualitas!',
-                                                style: TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w100)),
-                                          ]),
-                                      alignment: Alignment.centerLeft),
-                                  TextButton(
-                                      style: TextButton.styleFrom(
-                                          backgroundColor: kPrimaryColor),
-                                      child: Text("Rekomendasi",
-                                          style: TextStyle(
-                                            color: Color(0xffffffff),
-                                          )),
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children : [
+                                  ElevatedButton(
                                       onPressed: () {
                                         showModalBottomSheet(
                                             isScrollControlled: true,
@@ -472,140 +518,54 @@ class HomePageState extends State<HomePage> {
                                                     ));
                                               });
                                             });
-                                      })
-                                ]),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: FutureBuilder<List<Category>>(
-                                  future: futureListCategory,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      WidgetsBinding.instance
-                                          ?.addPostFrameCallback((timeStamp) {
-                                        ///This schedules the callback to be executed in the next frame
-                                        /// thus avoiding calling setState during build
-                                        setState(() {
-                                          if (usedCategory.length == 0) {
-                                            setState(() {
-                                              usedCategory = snapshot.data!;
-                                              usedCategory.insert(
-                                                  0, new Category("Semua", 0));
-                                            });
-                                          }
-                                        });
-                                      });
-                                      return Row(
-                                          children: snapshot.data!
-                                              .map((e) => Container(
-                                            margin: EdgeInsets.only(left: 7.0),
-                                            child: ChoiceChip(
-                                              labelPadding: EdgeInsets.all(0.0),
-                                              label: Text(
-                                                e.nama_kategori,
-                                                style: TextStyle(
-                                                    color: kPrimaryColor,
-                                                    fontWeight:
-                                                    FontWeight.bold),
-                                              ),
-                                              selected: idSelected == e.id,
-                                              onSelected: (bool selected) {
-                                                setState(() {
-                                                  idSelected = e.id;
-                                                });
-                                                if (idSelected != 0) {
-                                                  setState(() {
-                                                    usedProducts = products
-                                                        .data!
-                                                        .where((data) =>
-                                                    data.main_category_id ==
-                                                        idSelected)
-                                                        .toList();
-                                                  });
-                                                } else {
-                                                  setState(() {
-                                                    usedProducts =
-                                                    products.data!;
-                                                  });
-                                                }
-                                              },
-                                              backgroundColor: Colors.white,
-                                              shape: StadiumBorder(
-                                                  side: BorderSide(
-                                                      color:
-                                                      Color(0xFF4db6ac))),
-                                              padding: EdgeInsets.all(6.0),
-                                            ),
-                                          ))
-                                              .toList());
-                                    } else if (snapshot.hasError) {
-                                      return Text("${snapshot.error}");
-                                    }
-                                    return Center(child: LinearProgressIndicator());
-                                  }),
-                            ),
-                            Container(
-                                height: MediaQuery.of(context).size.height * (0.53),
-                                child: SingleChildScrollView(
-                                    child: usedProducts.length > 0
-                                        ? GridView.builder(
-                                      physics: ScrollPhysics(),
-                                      shrinkWrap: true,
-                                      itemCount: usedProducts.length,
-                                      gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          mainAxisSpacing: 5,
-                                          crossAxisSpacing: 7),
-                                      itemBuilder:
-                                          (BuildContext context, int index) {
-                                        return GestureDetector(
-                                          child: GridProduct(usedProducts[index]),
-                                          onTap: () => {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      DetailPage(
-                                                          product: usedProducts[
-                                                          index])),
-                                            )
-                                          },
-                                        );
                                       },
-                                    )
-                                        : Center(
-                                      child: Text('Produk kosong',
+                                      style: ElevatedButton.styleFrom(
+                                        primary: kPrimaryLightColor,
+                                        shape: new RoundedRectangleBorder(
+                                          borderRadius: new BorderRadius.circular(30.0),
+                                        ),
+                                        padding: EdgeInsets.all(8),
+                                      ),
+                                      child: Text('Iya',
                                           style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w100,
-                                              color: kPrimaryColor)),
-                                    )))
-                          ]);
-                        } else if (products.hasError) {
-                          return Text("${products.error}");
-                        }
-                        return Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(
-                                backgroundColor: kPrimaryColor,
-                              ),
-                              Text("\nMemuat data produk...")
-                            ],
-                          ),
-                        );
-                      }))],
-            )
-          ),
-      bottomNavigationBar: BottomNavbar(current: 0),
+                                              fontSize: 15, fontWeight: FontWeight.bold))),
+                                  SizedBox(width : 5),
+                                  ElevatedButton(
+                                      onPressed: () {
+                                        // _showModalBottomSheet();
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        primary: Colors.blue,
+                                        shape: new RoundedRectangleBorder(
+                                          borderRadius: new BorderRadius.circular(30.0),
+                                        ),
+                                        padding: EdgeInsets.all(8),
+                                      ),
+                                      child: Text('Tidak, Checkout saja',
+                                          style: TextStyle(
+                                              fontSize: 15, fontWeight: FontWeight.bold)))
+                                ]
+                            )
+                          ]
+                      )
+                    )
+                  ]
+                );
+              } else {
+                return Center(
+                    child: CircularProgressIndicator());
+              }
+
+            } else if (snapshot.hasError) {
+              print(snapshot.hasData);
+              return Text("Error : ${snapshot.error}");
+            }
+            return Center(
+                child: CircularProgressIndicator());
+          }),
+
     );
   }
-
   void _recommend() async {
     Parameter data = new Parameter(
         rekomenHarga, rekomenSupplier, rekomenRating, rekomenSubKategori);

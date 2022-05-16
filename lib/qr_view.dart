@@ -158,9 +158,9 @@ class _QRViewExampleState extends State<QRViewExample> {
           showAlertDialog(context);
         } else {
           controller.pauseCamera();
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => ProductDetail(kodeBarang : result!.code),
-          ));
+          // Navigator.of(context).push(MaterialPageRoute(
+          //   builder: (context) => ProductDetail(kodeBarang : result!.code),
+          // ));
         }
 
       }

@@ -29,13 +29,22 @@ class AuthController {
     }
   }
 
+
   postData(data, apiUrl) async {
     var fullUrl = API_URL + apiUrl;
     await _getToken();
-    print(token);
     return await http.post(
         Uri.parse(fullUrl),
         body: jsonEncode(data),
+        headers: _setHeaders()
+    );
+  }
+
+  getData(apiUrl) async {
+    var fullUrl = API_URL + apiUrl;
+    await _getToken();
+    return await http.get(
+        Uri.parse(fullUrl),
         headers: _setHeaders()
     );
   }
@@ -51,6 +60,15 @@ class AuthController {
 
   putData(data, apiUrl) async {
     var fullUrl = API_URL + apiUrl;
+    return await http.put(
+        Uri.parse(fullUrl),
+        body: jsonEncode(data),
+        headers: _setHeaders()
+    );
+  }
+  putDataAuth(data, apiUrl) async {
+    var fullUrl = API_URL + apiUrl;
+    await _getToken();
     return await http.put(
         Uri.parse(fullUrl),
         body: jsonEncode(data),

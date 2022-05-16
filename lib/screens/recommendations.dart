@@ -1,14 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/parameter.dart';
+import 'package:ghulam_app/screens/cart.dart';
+import 'package:ghulam_app/screens/cart_for_recommendation.dart';
 import 'package:ghulam_app/screens/detail_screen.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/app_bar.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/grid_product.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -27,6 +33,7 @@ class RecommendationState extends State<Recommendation> {
   final formatCurrency = new NumberFormat.simpleCurrency(locale: 'id_ID', decimalDigits: 0);
 
   bool isAuth = false;
+  var jumlah = 1;
   var idSelected = 0;
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -54,10 +61,10 @@ class RecommendationState extends State<Recommendation> {
     );
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.clear, color: Colors.grey, size: 40),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.clear, color: Colors.grey, size: 40),
+        //   onPressed: () => Navigator.of(context).pop(),
+        // ),
         centerTitle: true,
         title: Text('Rekomendasi Produk', style: TextStyle(color: Colors.black, fontSize : 20),),
         elevation: 0,
@@ -97,8 +104,87 @@ class RecommendationState extends State<Recommendation> {
                                               style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                                             ),
                                             // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
-                                            subtitle:Text('${formatCurrency.format(int.parse(products.data![index].harga_jual))}',
-                                                style: TextStyle(fontSize: 13, color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                                            subtitle:Column(
+                                              crossAxisAlignment : CrossAxisAlignment.start,
+                                              mainAxisAlignment: MainAxisAlignment.end,
+                                              children : [
+                                                Text('${formatCurrency.format(int.parse(products.data![index].harga_jual))}',
+                                                    style: TextStyle(fontSize: 13, color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                                                Row(
+                                                  children : [
+                                                    Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        mainAxisAlignment:MainAxisAlignment.center,
+                                                        children : [
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              shadowColor: Colors.transparent,
+                                                              primary: Colors.grey[200],
+                                                              shape: CircleBorder(),
+                                                              minimumSize: Size.zero, // Set this
+                                                              padding: EdgeInsets.all(3), // and this
+                                                            ),
+                                                            child: Icon(
+                                                              CupertinoIcons.minus,
+                                                              size: 12,
+                                                              color: kPrimaryLightColor,
+                                                            ),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                jumlah--;
+                                                              });
+                                                            },
+                                                          ),
+                                                          Text(
+                                                              '${jumlah}',
+                                                              style: TextStyle(
+                                                                  fontSize: 14,
+                                                                  color: Colors.black,
+                                                                  fontWeight: FontWeight.bold)
+                                                          ),
+                                                          ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              shadowColor: Colors.transparent,
+                                                              primary: Colors.grey[200],
+                                                              shape: CircleBorder(),
+                                                              minimumSize: Size.zero, // Set this
+                                                              padding: EdgeInsets.all(3), // and this
+                                                            ),
+                                                            child: Icon(
+                                                              CupertinoIcons.add,
+                                                              size: 12,
+                                                              color: kPrimaryLightColor,
+                                                            ),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                jumlah++;
+                                                              });
+                                                            },
+                                                          ),
+                                                        ]
+                                                    ),
+                                                    IconButton(
+                                                        icon: Icon(Icons.shopping_cart,
+                                                            color: kPrimaryLightColor),
+                                                        onPressed: () {
+                                                          print(products.data![index]);
+                                                          if(products.data![index].is_in_cart==true){
+                                                            Navigator.push(
+                                                              context,
+                                                              new MaterialPageRoute(
+                                                                  builder: (context) => CartRecommendationPage()
+                                                              ),
+                                                            );
+                                                          } else {
+                                                            _add_to_cart(products.data![index].id);
+                                                          }
+                                                        }
+                                                    )
+                                                  ]
+                                                )
+
+                                              ]
+                                            ),
                                             trailing: Container(
                                               decoration: BoxDecoration(color: index <= 2 ? kPrimaryLightColor : Colors.grey),
                                             child: Padding(
@@ -127,7 +213,6 @@ class RecommendationState extends State<Recommendation> {
                                       )
                                     },
                                   );
-
                               },
                             ) : Center(
                               child: Text('Produk kosong',
@@ -155,5 +240,40 @@ class RecommendationState extends State<Recommendation> {
       bottomNavigationBar: BottomNavbar(current: 0),
     );
   }
+  void _add_to_cart(id) async{
+      var data = {
+        'product_id' : id,
+        'jumlah' : jumlah,
+      };
+    var res = await AuthController().postData(data, '/cart/add');
+    var body = json.decode(res.body);
+    print(data);
+    if(body['success']){
+      Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => CartRecommendationPage()
+        ),
+      );
+    }else{
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal Menambahkan ke cart!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+  }
+
 
 }

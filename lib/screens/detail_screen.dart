@@ -1,18 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
+import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:intl/intl.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class DetailPage extends StatefulWidget {
   final Product? product;
-
   const DetailPage({Key? key, required this.product}) : super(key: key);
-
   @override
   State<StatefulWidget> createState() => new DetailPageState();
 }
@@ -20,17 +22,33 @@ class DetailPage extends StatefulWidget {
 class DetailPageState extends State<DetailPage> {
   final _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  bool _isLoading = false;
 
   var isPressed = false;
   int _jumlahBarang = 0;
   int totalBayar = 0;
+  void _is_in_wishlist(id) async {
+    var res = await AuthController().getData('/wishlist/exist/${id}');
+    var body = json.decode(res.body);
+    if (body['success']) {
+      if(body['is_exist']){
+        setState(() {
+          isPressed = true;
+        });
+      } else {
+        setState(() {
+          isPressed = false;
+        });
+      }
+         } else {
+      showSnackBar('Gagal mendapatkan data wishlist');
+    }
+  }
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    setState(() {
-      isPressed = false;
-    });
+    _is_in_wishlist(widget.product!.id);
   }
 
   @override
@@ -57,7 +75,7 @@ class DetailPageState extends State<DetailPage> {
                 ),
                 onPressed: () {
                   setState(() {
-                    isPressed = !isPressed;
+                    _add_to_wishlist(widget.product!.id);
                   });
                 }),
           )
@@ -124,7 +142,7 @@ class DetailPageState extends State<DetailPage> {
                         color: Colors.black,
                         fontWeight: FontWeight.w900)),
                 Text(
-                  '200 Stok tersedia',
+                  '${widget.product!.stok} Stok tersedia',
                   style: TextStyle(color: Colors.black, fontSize: 15),
                 ),
               ]),
@@ -136,7 +154,7 @@ class DetailPageState extends State<DetailPage> {
                       fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text(
-                'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
+                '${widget.product!.deskripsi}',
                 style: TextStyle(
                     fontSize: 14,
                     color: Colors.black,
@@ -351,4 +369,40 @@ class DetailPageState extends State<DetailPage> {
     );
     _scaffoldKey.currentState!.showSnackBar(snackBarContent);
   }
+  void _add_to_wishlist(id) async {
+    setState(() {
+      _isLoading = true;
+    });
+    if(isPressed==false){
+      var res = await AuthController().getData('/wishlist/add/${id}');
+      var body = json.decode(res.body);
+      if (body['success']) {
+        showSnackBar('Berhasil menambahkan ke wishlist');
+        setState(() {
+          isPressed = true;
+        });
+      } else {
+        showSnackBar('Gagal menambahkan ke wishlist');
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    } else {
+      var res = await AuthController().getData('/wishlist/remove/${id}');
+      var body = json.decode(res.body);
+      if (body['success']) {
+        showSnackBar('Berhasil menghapus dari wishlist');
+        setState(() {
+          isPressed = false;
+        });
+      } else {
+        showSnackBar('Gagal menghapus dari wishlist');
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    }
+
+  }
+
 }

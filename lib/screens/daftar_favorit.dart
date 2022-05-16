@@ -1,108 +1,156 @@
 // import 'package:darurat_app/login_pemilik_kos.dart';
 // import 'package:darurat_app/register_pemilik_kos.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart';
+import 'package:ghulam_app/controllers/product_controller.dart';
+import 'package:ghulam_app/models/product.dart';
+import 'package:ghulam_app/models/wishlist.dart';
+import 'package:ghulam_app/screens/detail_screen.dart';
+import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
+import 'package:ghulam_app/widgets/second_app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 class FavoritPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => new FavoritPageState();
 }
 class FavoritPageState extends State<FavoritPage> {
+  final formatCurrency = new NumberFormat.simpleCurrency(locale: 'id_ID');
+  late Future<List<Wishlist>> futureListProduct;
+  var array_of_orders = [];
+  int isAuth = 2;
+  var jumlah_barang = [];
+  var jumlah = [];
+  var harga_barang = [];
+  var id_barang = [];
+
+  var total = 0;
+  bool authAppBar = false;
+
+  void _checkIfLoggedIn() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    var token = localStorage.getString('token');
+    if (token != null) {
+      setState(() {
+        isAuth = 1;
+        authAppBar = true;
+      });
+    } else {
+      setState(() {
+        isAuth = 0;
+        authAppBar = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    _checkIfLoggedIn();
+    futureListProduct = ProductNetwork().getFromWishlist();
+  }
+
+  Future<List<Wishlist>> _refreshProducts(BuildContext context) async {
+    futureListProduct = ProductNetwork().getFromWishlist();
+    return futureListProduct;
+  }
   Widget build(BuildContext context) {
-
-
     final ButtonStyle styleButton = ElevatedButton.styleFrom(
       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
       onPrimary: Colors.black,
       padding: EdgeInsets.fromLTRB(100, 15, 100, 15),
       primary: Color(0xfff5c32b),
     );
+
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(30,90,30,15),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: Text('Favorit', style: TextStyle(color: Colors.black, fontSize: 25, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 25),
-            //element
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: Card(
-                      clipBehavior: Clip.antiAlias,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10.0),
-                          child:
-                          Image(image: AssetImage('images/sample_product.jpg'),fit: BoxFit.cover,)
-                      )),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Chip(
-                        padding: EdgeInsets.all(0),
-                        backgroundColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(color: Colors.grey, width: 1),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        label: Text('Putra', style: TextStyle(color: Colors.black)),
-                      ),
-                      Text('Kost keputih Tipe B'),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_outlined, size:20),
-                          Text('Sukolilo')
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              text: 'Rp 600000',
-                              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                              children: const <TextSpan>[
-                                TextSpan(text: ' / Bulan', style: TextStyle(fontWeight: FontWeight.normal)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 3),
-
-                          Row(
-                            children: [
-                              Icon(Icons.star, size:20,color: Color(0xfff5c32b),),
-                              Text('5.0')
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                ),
-              ],
-            ),
-
-          ],
+        appBar: SecondAppBar(
+          appBar: AppBar(),
+          isAuth: authAppBar,
+          title: 'Wishlist',
         ),
-      ),
-      bottomNavigationBar: BottomNavbar(current : 1),
+      body: RefreshIndicator(
+          color: Colors.white,
+          backgroundColor: kPrimaryColor,
+          onRefresh: () => _refreshProducts(context),
+          child: Stack(
+            children: <Widget>[ListView(), FutureBuilder<List<Wishlist>>(
+                future: futureListProduct,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    if (snapshot.data!.length != 0) {
+                      return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return GestureDetector(
+                              child: Card(
+                                elevation: 8.0,
+                                margin: new EdgeInsets.symmetric(
+                                    horizontal: 10.0, vertical: 6.0),
+                                child: Container(
+                                  // decoration: BoxDecoration(color: Color.fromRGBO(64, 75, 96, .9)),
+                                  child: ListTile(
+                                      contentPadding:
+                                      EdgeInsets.symmetric(
+                                          horizontal: 7.0,
+                                          vertical: 5.0),
+                                      leading: AspectRatio(
+                                        aspectRatio: 3.0 / 4.0,
+                                        child: Image.network(IMG_URL +
+                                            snapshot.data![index].product!.gambar),
+                                      ),
+                                      title: Text(
+                                        snapshot.data![index].product!.nama_barang,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
+                                      subtitle: Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                                '${formatCurrency.format(int.parse(snapshot.data![index].product!.harga_jual))}',
+                                                style: TextStyle(
+                                                    fontSize: 13,
+                                                    color:
+                                                    Colors.redAccent,
+                                                    fontWeight:
+                                                    FontWeight.bold)),
+
+                                          ]),
+                                      ),
+                                ),
+                              ),
+                              onTap: () => {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => DetailPage(
+                                          product: snapshot
+                                              .data![index].product)),
+                                )
+                              },
+                            );
+                          });
+                    } else {
+                      return Center(child: Text('Tidak ada barang di wishlist'));
+                    }
+                  } else if (snapshot.hasError) {
+                    print(snapshot.hasData);
+                    return Text("Error : ${snapshot.error}");
+                  }
+                  return Center(child: CircularProgressIndicator());
+                })],
+          ))
     );
   }
 }

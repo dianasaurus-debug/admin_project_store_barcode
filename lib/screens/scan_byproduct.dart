@@ -1,22 +1,30 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
+import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/screens/cart.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 
-class ScanPage extends StatefulWidget {
+class ScanByCode extends StatefulWidget {
+  final Product? product;
+
+  const ScanByCode({Key? key, required this.product}) : super(key: key);
+
   @override
-  _ScanPageState createState() => _ScanPageState();
+  _ScanByCodeState createState() => _ScanByCodeState();
 }
 
-class _ScanPageState extends State<ScanPage> {
+class _ScanByCodeState extends State<ScanByCode> {
   final _formKey = GlobalKey<FormState>();
   Barcode? result;
   QRViewController? controller;
@@ -25,14 +33,14 @@ class _ScanPageState extends State<ScanPage> {
   var array_of_kode_barang = [];
   // In order to get hot reload to work we need to pause the camera if the platform
   // is android, or resume the camera if the platform is iOS.
-  // @override
-  // void reassemble() {
-  //   super.reassemble();
-  //   if (Platform.isAndroid) {
-  //     controller!.pauseCamera();
-  //   }
-  //   controller!.resumeCamera();
-  // }
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller!.pauseCamera();
+    }
+    controller!.resumeCamera();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +51,7 @@ class _ScanPageState extends State<ScanPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
-        title: Text('Scan Barang', style: TextStyle(color: Colors.black, fontSize : 20),),
+        title: Text('Scan Produk ${widget.product!.nama_barang}', style: TextStyle(color: Colors.black, fontSize : 15),),
         elevation: 0,
         backgroundColor: Color(0xffffffff),
       ),
@@ -51,63 +59,49 @@ class _ScanPageState extends State<ScanPage> {
         children: <Widget>[
           Expanded(flex: 4, child: _buildQrView(context)), //tampilan qr code
           Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        margin: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                            onPressed: () async {
-                              await controller?.toggleFlash();
-                              setState(() {});
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                          onPressed: () async {
+                            await controller?.toggleFlash();
+                            setState(() {});
+                          },
+                          child: FutureBuilder(
+                            future: controller?.getFlashStatus(),
+                            builder: (context, snapshot) {
+                              return snapshot.data == true ? Icon(Icons.flash_on) : Icon(Icons.flash_off);
                             },
-                            child: FutureBuilder(
-                              future: controller?.getFlashStatus(),
-                              builder: (context, snapshot) {
-                               return snapshot.data == true ? Icon(Icons.flash_on) : Icon(Icons.flash_off);
-                              },
-                            )),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                            onPressed: () async {
-                              await controller?.flipCamera();
-                              setState(() {});
+                          )),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      child: ElevatedButton(
+                          onPressed: () async {
+                            await controller?.flipCamera();
+                            setState(() {});
+                          },
+                          child: FutureBuilder(
+                            future: controller?.getCameraInfo(),
+                            builder: (context, snapshot) {
+                              if (snapshot.data != null) {
+                                return snapshot.data == 'back' ? Icon(Icons.camera_front) : Icon(Icons.camera_front);
+                              } else {
+                                return const Text('loading');
+                              }
                             },
-                            child: FutureBuilder(
-                              future: controller?.getCameraInfo(),
-                              builder: (context, snapshot) {
-                                if (snapshot.data != null) {
-                                  return snapshot.data == 'back' ? Icon(Icons.camera_front) : Icon(Icons.camera_front);
-                                } else {
-                                  return const Text('loading');
-                                }
-                              },
-                            )),
-                      )
-                    ],
-                  ),
-                  ElevatedButton(
-                      onPressed: () {
-                        // _showModalBottomSheet();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary: kPrimaryLightColor,
-                        shape: new RoundedRectangleBorder(
-                          borderRadius: new BorderRadius.circular(30.0),
-                        ),
-                        padding: EdgeInsets.all(8),
-                      ),
-                      child: Text('Daftar Barang',
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold)))
-                ],
-              ),
+                          )),
+                    )
+                  ],
+                ),
+              ],
+            ),
           ) //tampilan tombol bawah qr code
         ],
       ),
@@ -140,30 +134,18 @@ class _ScanPageState extends State<ScanPage> {
       this.controller = controller;
     });
     controller.scannedDataStream.listen((scanData) {
+      print('im listening');
       setState(() {
         result = scanData;
       });
       if(result!=null){
-        controller.pauseCamera();
-        print(result);
-        setState(() {
-          array_of_kode_barang.add(result);
-        });
-          // controller.pauseCamera();
-        //   Navigator.of(context).push(MaterialPageRoute(
-        //     builder: (context) => CartPage(),
-        //   ));
-        // // if(widget.kodeBarang!=result!.code){
-        // //   controller.pauseCamera();
-        // //   showAlertDialog(context);
-        // // } else {
-        // //   controller.pauseCamera();
-        // //   Navigator.of(context).push(MaterialPageRoute(
-        // //     builder: (context) => ProductDetail(kodeBarang : result!.code),
-        // //   ));
-        // // }
-        showSnackBar('Barang berhasil ditambahkan ke daftar!');
-        print(array_of_kode_barang);
+        if(widget.product!.kode_barang!=result!.code){
+          controller.pauseCamera();
+          showAlertDialog(context);
+        } else {
+          controller.stopCamera();
+          scan();
+        }
       }
     });
   }
@@ -214,7 +196,37 @@ class _ScanPageState extends State<ScanPage> {
     );
     _scaffoldKey.currentState!.showSnackBar(snackBarContent);
   }
+  void scan() async{
+    var res = await AuthController().putDataAuth({}, '/cart/scan/${widget.product!.id}');
+    var body = json.decode(res.body);
+    print(body);
+    if(body['success']){
+      showSnackBar('Berhasil scan produk!');
+      Future.delayed(Duration(milliseconds: 200), () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => CartPage(),
+        ));
+      });
 
+    }else{
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal scan produk!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+  }
 
   @override
   void dispose() {
