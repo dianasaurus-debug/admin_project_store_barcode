@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/category_controller.dart';
@@ -8,14 +9,15 @@ import 'package:ghulam_app/models/parameter.dart';
 import 'package:ghulam_app/models/sub_category.dart';
 import 'package:ghulam_app/screens/detail_screen.dart';
 import 'package:ghulam_app/models/product.dart';
+import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/screens/recommendations.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/app_bar.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
-import 'package:ghulam_app/widgets/category_chips.dart';
 import 'package:ghulam_app/widgets/grid_product.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:intl/intl.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -43,6 +45,7 @@ class HomePageState extends State<HomePage> {
   late Future<List<Product>> futureListProduct;
   late Future<List<Category>> futureListCategory;
   late Future<List<Category>> futureListCategoryNew;
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   bool isAuth = false;
   var idSelected = 0;
@@ -60,8 +63,32 @@ class HomePageState extends State<HomePage> {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
     if (token != null) {
+        setState(() {
+          _isLoading = true;
+        });
+
+          var res = await AuthController().getData('/profile');
+          var body = json.decode(res.body);
+          if (body['success']) {
+            setState(() {
+              isAuth = true;
+            });
+          } else {
+            setState(() {
+              isAuth = true;
+            });
+            Navigator.push(
+              context,
+              new MaterialPageRoute(builder: (context) => LoginIndexPage()),
+            );
+          }
+          setState(() {
+            _isLoading = false;
+          });
+
+    } else {
       setState(() {
-        isAuth = true;
+        isAuth = false;
       });
     }
   }
@@ -136,342 +163,352 @@ class HomePageState extends State<HomePage> {
                                             color: Color(0xffffffff),
                                           )),
                                       onPressed: () {
-                                        showModalBottomSheet(
-                                            isScrollControlled: true,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.vertical(
-                                                  top: Radius.circular(25.0)),
-                                            ),
-                                            context: context,
-                                            builder: (context) {
-                                              return StatefulBuilder(builder: (BuildContext
-                                              context,
-                                                  StateSetter
-                                                  setState /*You can rename this!*/) {
-                                                return SingleChildScrollView(
-                                                    padding: EdgeInsets.all(20),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: <Widget>[
-                                                        Wrap(children: [
-                                                          FutureBuilder<List<Category>>(
-                                                              future:
-                                                              futureListCategoryNew,
-                                                              builder: (context,
-                                                                  data_kategori) {
-                                                                if (data_kategori
-                                                                    .hasData) {
-                                                                  return Column(
-                                                                      crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
-                                                                      children: [
-                                                                        Text('Kategori',
-                                                                            style: TextStyle(
-                                                                                fontSize:
-                                                                                18,
-                                                                                fontWeight:
-                                                                                FontWeight.bold)),
-                                                                        DropdownButtonFormField<
-                                                                            Category>(
-                                                                          elevation: 16,
-                                                                          decoration:
-                                                                          InputDecoration(
-                                                                              focusedBorder:
-                                                                              OutlineInputBorder(
-                                                                                borderRadius:
-                                                                                BorderRadius.circular(30.0),
-                                                                                borderSide:
-                                                                                BorderSide(color: kPrimaryColor, width: 2),
-                                                                              ),
-                                                                              enabledBorder:
-                                                                              OutlineInputBorder(
-                                                                                borderRadius:
-                                                                                BorderRadius.circular(30.0),
-                                                                                borderSide:
-                                                                                BorderSide(color: kPrimaryLightColor, width: 2),
-                                                                              ),
-                                                                              errorBorder:
-                                                                              OutlineInputBorder(
-                                                                                borderRadius:
-                                                                                BorderRadius.circular(30.0),
-                                                                                borderSide:
-                                                                                BorderSide(color: Colors.red, width: 2),
-                                                                              ),
-                                                                              focusedErrorBorder:
-                                                                              OutlineInputBorder(
-                                                                                borderRadius:
-                                                                                BorderRadius.circular(30.0),
-                                                                                borderSide:
-                                                                                BorderSide(color: Colors.red, width: 2),
-                                                                              ),
-                                                                              hintText:
-                                                                              'Pilih kategori',
-                                                                              isDense:
-                                                                              true),
-                                                                          onChanged:
-                                                                              (newValue) {
+                                        if(isAuth==1){
+                                          showModalBottomSheet(
+                                              isScrollControlled: true,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.vertical(
+                                                    top: Radius.circular(25.0)),
+                                              ),
+                                              context: context,
+                                              builder: (context) {
+                                                return StatefulBuilder(builder: (BuildContext
+                                                context,
+                                                    StateSetter
+                                                    setState /*You can rename this!*/) {
+                                                  return SingleChildScrollView(
+                                                      padding: EdgeInsets.all(20),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: <Widget>[
+                                                          Wrap(children: [
+                                                            FutureBuilder<List<Category>>(
+                                                                future:
+                                                                futureListCategoryNew,
+                                                                builder: (context,
+                                                                    data_kategori) {
+                                                                  if (data_kategori
+                                                                      .hasData) {
+                                                                    return Column(
+                                                                        crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                        children: [
+                                                                          Text('Kategori',
+                                                                              style: TextStyle(
+                                                                                  fontSize:
+                                                                                  18,
+                                                                                  fontWeight:
+                                                                                  FontWeight.bold)),
+                                                                          DropdownButtonFormField<
+                                                                              Category>(
+                                                                            elevation: 16,
+                                                                            decoration:
+                                                                            InputDecoration(
+                                                                                focusedBorder:
+                                                                                OutlineInputBorder(
+                                                                                  borderRadius:
+                                                                                  BorderRadius.circular(30.0),
+                                                                                  borderSide:
+                                                                                  BorderSide(color: kPrimaryColor, width: 2),
+                                                                                ),
+                                                                                enabledBorder:
+                                                                                OutlineInputBorder(
+                                                                                  borderRadius:
+                                                                                  BorderRadius.circular(30.0),
+                                                                                  borderSide:
+                                                                                  BorderSide(color: kPrimaryLightColor, width: 2),
+                                                                                ),
+                                                                                errorBorder:
+                                                                                OutlineInputBorder(
+                                                                                  borderRadius:
+                                                                                  BorderRadius.circular(30.0),
+                                                                                  borderSide:
+                                                                                  BorderSide(color: Colors.red, width: 2),
+                                                                                ),
+                                                                                focusedErrorBorder:
+                                                                                OutlineInputBorder(
+                                                                                  borderRadius:
+                                                                                  BorderRadius.circular(30.0),
+                                                                                  borderSide:
+                                                                                  BorderSide(color: Colors.red, width: 2),
+                                                                                ),
+                                                                                hintText:
+                                                                                'Pilih kategori',
+                                                                                isDense:
+                                                                                true),
+                                                                            onChanged:
+                                                                                (newValue) {
+                                                                              setState(
+                                                                                      () {
+                                                                                    if (newValue !=
+                                                                                        null) {
+                                                                                      rekomenKategori =
+                                                                                          newValue;
+                                                                                    }
+                                                                                  });
+                                                                            },
+                                                                            items: data_kategori
+                                                                                .data!
+                                                                                .map((Category
+                                                                            category) {
+                                                                              return new DropdownMenuItem<
+                                                                                  Category>(
+                                                                                value:
+                                                                                category,
+                                                                                child:
+                                                                                new Text(
+                                                                                  category
+                                                                                      .nama_kategori,
+                                                                                  style: new TextStyle(
+                                                                                      color:
+                                                                                      Colors.black),
+                                                                                ),
+                                                                              );
+                                                                            }).toList(),
+                                                                          ),
+                                                                          SizedBox(
+                                                                              height: 10),
+                                                                          Text(
+                                                                              'Sub Kategori',
+                                                                              style: TextStyle(
+                                                                                  fontSize:
+                                                                                  18,
+                                                                                  fontWeight:
+                                                                                  FontWeight.bold)),
+                                                                          rekomenKategori.id != 0 ? DropdownButtonFormField<SubCategory>(
+                                                                            elevation:
+                                                                            16,
+                                                                            decoration: InputDecoration(
+                                                                                focusedBorder: OutlineInputBorder(
+                                                                                  borderRadius: BorderRadius.circular(30.0),
+                                                                                  borderSide: BorderSide(color: kPrimaryColor, width: 2),
+                                                                                ),
+                                                                                enabledBorder: OutlineInputBorder(
+                                                                                  borderRadius: BorderRadius.circular(30.0),
+                                                                                  borderSide: BorderSide(color: kPrimaryLightColor, width: 2),
+                                                                                ),
+                                                                                errorBorder: OutlineInputBorder(
+                                                                                  borderRadius: BorderRadius.circular(30.0),
+                                                                                  borderSide: BorderSide(color: Colors.red, width: 2),
+                                                                                ),
+                                                                                focusedErrorBorder: OutlineInputBorder(
+                                                                                  borderRadius: BorderRadius.circular(30.0),
+                                                                                  borderSide: BorderSide(color: Colors.red, width: 2),
+                                                                                ),
+                                                                                hintText: 'Pilih sub kategori',
+                                                                                isDense: true),
+                                                                            onChanged:
+                                                                                (newValue) {
+                                                                              setState(
+                                                                                      () {
+                                                                                    if (newValue !=
+                                                                                        null) {
+                                                                                      rekomenSubKategori = newValue.id;
+                                                                                    }
+                                                                                  });
+                                                                            },
+                                                                            items: rekomenKategori
+                                                                                .sub_categories!
+                                                                                .map((SubCategory
+                                                                            category) {
+                                                                              return new DropdownMenuItem<
+                                                                                  SubCategory>(
+                                                                                value:
+                                                                                category,
+                                                                                child:
+                                                                                new Text(
+                                                                                  category.nama_kategori,
+                                                                                  style: new TextStyle(color: Colors.black),
+                                                                                ),
+                                                                              );
+                                                                            }).toList(),
+                                                                          )
+                                                                              :  DropdownButtonFormField<dynamic>(
+                                                                            elevation: 16,
+                                                                            decoration: InputDecoration(
+                                                                                enabled : false,
+                                                                                border: OutlineInputBorder(
+                                                                                  borderRadius: BorderRadius.circular(30.0),
+                                                                                ),
+                                                                                hintText: 'Pilih sub kategori',
+                                                                                isDense: true),
+                                                                            onChanged: null,
+                                                                            items: null,
+                                                                          )
+                                                                        ]);
+                                                                  } else if (data_kategori
+                                                                      .hasError) {
+                                                                    return Text(
+                                                                        "${data_kategori.error}");
+                                                                  }
+                                                                  return Center(
+                                                                      child:
+                                                                      LinearProgressIndicator());
+                                                                }),
+                                                            SizedBox(height: 10),
+                                                            Text('Harga',
+                                                                style: TextStyle(
+                                                                    fontSize: 18,
+                                                                    fontWeight:
+                                                                    FontWeight.bold)),
+                                                            SingleChildScrollView(
+                                                                scrollDirection:
+                                                                Axis.horizontal,
+                                                                child: Row(
+                                                                    children: list_label_bobot
+                                                                        .map((e) => Container(
+                                                                        margin: EdgeInsets.only(left: 7.0),
+                                                                        child: ChoiceChip(
+                                                                          label: Text(
+                                                                              e.label),
+                                                                          selected:
+                                                                          rekomenHarga ==
+                                                                              e.id,
+                                                                          selectedColor:
+                                                                          kPrimaryColor,
+                                                                          onSelected:
+                                                                              (bool
+                                                                          selected) {
                                                                             setState(
                                                                                     () {
-                                                                                  if (newValue !=
-                                                                                      null) {
-                                                                                    rekomenKategori =
-                                                                                        newValue;
-                                                                                  }
+                                                                                  rekomenHarga =
+                                                                                      e.id;
                                                                                 });
                                                                           },
-                                                                          items: data_kategori
-                                                                              .data!
-                                                                              .map((Category
-                                                                          category) {
-                                                                            return new DropdownMenuItem<
-                                                                                Category>(
-                                                                              value:
-                                                                              category,
-                                                                              child:
-                                                                              new Text(
-                                                                                category
-                                                                                    .nama_kategori,
-                                                                                style: new TextStyle(
-                                                                                    color:
-                                                                                    Colors.black),
-                                                                              ),
-                                                                            );
-                                                                          }).toList(),
-                                                                        ),
-                                                                        SizedBox(
-                                                                            height: 10),
-                                                                        Text(
-                                                                            'Sub Kategori',
-                                                                            style: TextStyle(
-                                                                                fontSize:
-                                                                                18,
-                                                                                fontWeight:
-                                                                                FontWeight.bold)),
-                                                                        rekomenKategori.id != 0 ? DropdownButtonFormField<SubCategory>(
-                                                                          elevation:
-                                                                          16,
-                                                                          decoration: InputDecoration(
-                                                                              focusedBorder: OutlineInputBorder(
-                                                                                borderRadius: BorderRadius.circular(30.0),
-                                                                                borderSide: BorderSide(color: kPrimaryColor, width: 2),
-                                                                              ),
-                                                                              enabledBorder: OutlineInputBorder(
-                                                                                borderRadius: BorderRadius.circular(30.0),
-                                                                                borderSide: BorderSide(color: kPrimaryLightColor, width: 2),
-                                                                              ),
-                                                                              errorBorder: OutlineInputBorder(
-                                                                                borderRadius: BorderRadius.circular(30.0),
-                                                                                borderSide: BorderSide(color: Colors.red, width: 2),
-                                                                              ),
-                                                                              focusedErrorBorder: OutlineInputBorder(
-                                                                                borderRadius: BorderRadius.circular(30.0),
-                                                                                borderSide: BorderSide(color: Colors.red, width: 2),
-                                                                              ),
-                                                                              hintText: 'Pilih sub kategori',
-                                                                              isDense: true),
-                                                                          onChanged:
-                                                                              (newValue) {
+                                                                          backgroundColor:
+                                                                          kPrimaryLightColor,
+                                                                          labelStyle:
+                                                                          TextStyle(
+                                                                              color:
+                                                                              Colors.white),
+                                                                        )))
+                                                                        .toList())),
+                                                            SizedBox(height: 10),
+                                                            Text('Rating',
+                                                                style: TextStyle(
+                                                                    fontSize: 18,
+                                                                    fontWeight:
+                                                                    FontWeight.bold)),
+                                                            SingleChildScrollView(
+                                                                scrollDirection:
+                                                                Axis.horizontal,
+                                                                child: Row(
+                                                                    children: list_label_bobot
+                                                                        .map((e) => Container(
+                                                                        margin: EdgeInsets.only(left: 7.0),
+                                                                        child: ChoiceChip(
+                                                                          label: Text(
+                                                                              e.label),
+                                                                          selected:
+                                                                          rekomenRating ==
+                                                                              e.id,
+                                                                          selectedColor:
+                                                                          kPrimaryColor,
+                                                                          onSelected:
+                                                                              (bool
+                                                                          selected) {
                                                                             setState(
                                                                                     () {
-                                                                                  if (newValue !=
-                                                                                      null) {
-                                                                                    rekomenSubKategori = newValue.id;
-                                                                                  }
+                                                                                  rekomenRating =
+                                                                                      e.id;
                                                                                 });
                                                                           },
-                                                                          items: rekomenKategori
-                                                                              .sub_categories!
-                                                                              .map((SubCategory
-                                                                          category) {
-                                                                            return new DropdownMenuItem<
-                                                                                SubCategory>(
-                                                                              value:
-                                                                              category,
-                                                                              child:
-                                                                              new Text(
-                                                                                category.nama_kategori,
-                                                                                style: new TextStyle(color: Colors.black),
-                                                                              ),
-                                                                            );
-                                                                          }).toList(),
-                                                                        )
-                                                                            :  DropdownButtonFormField<dynamic>(
-                                                                          elevation: 16,
-                                                                          decoration: InputDecoration(
-                                                                              enabled : false,
-                                                                              border: OutlineInputBorder(
-                                                                                borderRadius: BorderRadius.circular(30.0),
-                                                                              ),
-                                                                              hintText: 'Pilih sub kategori',
-                                                                              isDense: true),
-                                                                          onChanged: null,
-                                                                          items: null,
-                                                                        )
-                                                                      ]);
-                                                                } else if (data_kategori
-                                                                    .hasError) {
-                                                                  return Text(
-                                                                      "${data_kategori.error}");
-                                                                }
-                                                                return Center(
-                                                                    child:
-                                                                    LinearProgressIndicator());
-                                                              }),
-                                                          SizedBox(height: 10),
-                                                          Text('Harga',
-                                                              style: TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                  FontWeight.bold)),
-                                                          SingleChildScrollView(
-                                                              scrollDirection:
-                                                              Axis.horizontal,
-                                                              child: Row(
-                                                                  children: list_label_bobot
-                                                                      .map((e) => Container(
-                                                                      margin: EdgeInsets.only(left: 7.0),
-                                                                      child: ChoiceChip(
-                                                                        label: Text(
-                                                                            e.label),
-                                                                        selected:
-                                                                        rekomenHarga ==
-                                                                            e.id,
-                                                                        selectedColor:
-                                                                        kPrimaryColor,
-                                                                        onSelected:
-                                                                            (bool
-                                                                        selected) {
-                                                                          setState(
-                                                                                  () {
-                                                                                rekomenHarga =
-                                                                                    e.id;
-                                                                              });
-                                                                        },
-                                                                        backgroundColor:
-                                                                        kPrimaryLightColor,
-                                                                        labelStyle:
-                                                                        TextStyle(
-                                                                            color:
-                                                                            Colors.white),
-                                                                      )))
-                                                                      .toList())),
-                                                          SizedBox(height: 10),
-                                                          Text('Rating',
-                                                              style: TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                  FontWeight.bold)),
-                                                          SingleChildScrollView(
-                                                              scrollDirection:
-                                                              Axis.horizontal,
-                                                              child: Row(
-                                                                  children: list_label_bobot
-                                                                      .map((e) => Container(
-                                                                      margin: EdgeInsets.only(left: 7.0),
-                                                                      child: ChoiceChip(
-                                                                        label: Text(
-                                                                            e.label),
-                                                                        selected:
-                                                                        rekomenRating ==
-                                                                            e.id,
-                                                                        selectedColor:
-                                                                        kPrimaryColor,
-                                                                        onSelected:
-                                                                            (bool
-                                                                        selected) {
-                                                                          setState(
-                                                                                  () {
-                                                                                rekomenRating =
-                                                                                    e.id;
-                                                                              });
-                                                                        },
-                                                                        backgroundColor:
-                                                                        kPrimaryLightColor,
-                                                                        labelStyle:
-                                                                        TextStyle(
-                                                                            color:
-                                                                            Colors.white),
-                                                                      )))
-                                                                      .toList())),
-                                                          SizedBox(height: 10),
-                                                          Text('Suplier',
-                                                              style: TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                  FontWeight.bold)),
-                                                          SingleChildScrollView(
-                                                              scrollDirection:
-                                                              Axis.horizontal,
-                                                              child: Row(
-                                                                  children: list_label_bobot
-                                                                      .map((e) => Container(
-                                                                      margin: EdgeInsets.only(left: 7.0),
-                                                                      child: ChoiceChip(
-                                                                        label: Text(
-                                                                            e.label),
-                                                                        selected:
-                                                                        rekomenSupplier ==
-                                                                            e.id,
-                                                                        selectedColor:
-                                                                        kPrimaryColor,
-                                                                        onSelected:
-                                                                            (bool
-                                                                        selected) {
-                                                                          setState(
-                                                                                  () {
-                                                                                rekomenSupplier =
-                                                                                    e.id;
-                                                                              });
-                                                                        },
-                                                                        backgroundColor:
-                                                                        kPrimaryLightColor,
-                                                                        labelStyle:
-                                                                        TextStyle(
-                                                                            color:
-                                                                            Colors.white),
-                                                                      )))
-                                                                      .toList())),
-                                                        ]),
-                                                        SizedBox(height: 20),
-                                                        Row(children: [
-                                                          Expanded(
-                                                              child: ElevatedButton(
-                                                                  onPressed: () {
-                                                                    _recommend();
-                                                                  },
-                                                                  style: ElevatedButton
-                                                                      .styleFrom(
-                                                                    primary:
-                                                                    kPrimaryLightColor,
-                                                                    shape:
-                                                                    new RoundedRectangleBorder(
-                                                                      borderRadius:
-                                                                      new BorderRadius
-                                                                          .circular(
-                                                                          15.0),
+                                                                          backgroundColor:
+                                                                          kPrimaryLightColor,
+                                                                          labelStyle:
+                                                                          TextStyle(
+                                                                              color:
+                                                                              Colors.white),
+                                                                        )))
+                                                                        .toList())),
+                                                            SizedBox(height: 10),
+                                                            Text('Suplier',
+                                                                style: TextStyle(
+                                                                    fontSize: 18,
+                                                                    fontWeight:
+                                                                    FontWeight.bold)),
+                                                            SingleChildScrollView(
+                                                                scrollDirection:
+                                                                Axis.horizontal,
+                                                                child: Row(
+                                                                    children: list_label_bobot
+                                                                        .map((e) => Container(
+                                                                        margin: EdgeInsets.only(left: 7.0),
+                                                                        child: ChoiceChip(
+                                                                          label: Text(
+                                                                              e.label),
+                                                                          selected:
+                                                                          rekomenSupplier ==
+                                                                              e.id,
+                                                                          selectedColor:
+                                                                          kPrimaryColor,
+                                                                          onSelected:
+                                                                              (bool
+                                                                          selected) {
+                                                                            setState(
+                                                                                    () {
+                                                                                  rekomenSupplier =
+                                                                                      e.id;
+                                                                                });
+                                                                          },
+                                                                          backgroundColor:
+                                                                          kPrimaryLightColor,
+                                                                          labelStyle:
+                                                                          TextStyle(
+                                                                              color:
+                                                                              Colors.white),
+                                                                        )))
+                                                                        .toList())),
+                                                          ]),
+                                                          SizedBox(height: 20),
+                                                          Row(children: [
+                                                            Expanded(
+                                                                child: ElevatedButton(
+                                                                    onPressed: () {
+                                                                      _recommend();
+                                                                    },
+                                                                    style: ElevatedButton
+                                                                        .styleFrom(
+                                                                      primary:
+                                                                      kPrimaryLightColor,
+                                                                      shape:
+                                                                      new RoundedRectangleBorder(
+                                                                        borderRadius:
+                                                                        new BorderRadius
+                                                                            .circular(
+                                                                            15.0),
+                                                                      ),
+                                                                      padding:
+                                                                      EdgeInsets.all(
+                                                                          15),
                                                                     ),
-                                                                    padding:
-                                                                    EdgeInsets.all(
-                                                                        15),
-                                                                  ),
-                                                                  child: Text(
-                                                                      _isLoading ==
-                                                                          false
-                                                                          ? 'Rekomendasikan'
-                                                                          : 'Memuat...',
-                                                                      style: TextStyle(
-                                                                          fontSize: 18,
-                                                                          fontWeight:
-                                                                          FontWeight
-                                                                              .bold))))
-                                                        ])
-                                                      ],
-                                                    ));
+                                                                    child: Text(
+                                                                        _isLoading ==
+                                                                            false
+                                                                            ? 'Rekomendasikan'
+                                                                            : 'Memuat...',
+                                                                        style: TextStyle(
+                                                                            fontSize: 18,
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold))))
+                                                          ])
+                                                        ],
+                                                      ));
+                                                });
                                               });
-                                            });
+                                        } else {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    LoginIndexPage()),
+                                          );
+                                        }
+
                                       })
                                 ]),
                             SizedBox(
@@ -614,4 +651,5 @@ class HomePageState extends State<HomePage> {
       new MaterialPageRoute(builder: (context) => Recommendation(data: data)),
     );
   }
+
 }

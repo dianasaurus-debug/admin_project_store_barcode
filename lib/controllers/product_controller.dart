@@ -30,6 +30,7 @@ class ProductNetwork {
     if (res.statusCode == 200) {
       var json = jsonDecode(res.body);
       List data = json['data'];
+      print(data);
       return data.map((products) => new Product.fromJson(products)).toList();
     } else {
       throw Exception('Failed to fetch data');

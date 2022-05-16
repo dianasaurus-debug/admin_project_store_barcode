@@ -109,13 +109,35 @@ class DetailPageState extends State<DetailPage> {
             ),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                '${widget.product!.nama_barang}',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: kPrimaryColor,
-                    fontSize: 20),
-              ),
+                  Row(
+                    mainAxisAlignment : MainAxisAlignment.spaceBetween,
+                    children : [
+                      Text(
+                        '${widget.product!.nama_barang}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: kPrimaryColor,
+                            fontSize: 20),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shadowColor: Colors.transparent,
+                          primary: Colors.grey[100],
+                          shape: CircleBorder(),
+                          padding: EdgeInsets.all(10),
+                        ),
+                        child: Icon(
+                          CupertinoIcons.cart_fill_badge_plus,
+                          size: 25,
+                          color: kPrimaryLightColor,
+                        ),
+                        onPressed: () {
+                          showSnackBar('Barang berhasil dimasukkan cart!');
+                        },
+                      )
+                    ]
+                  ),
+
               SizedBox(height: 8),
               Row(children: [
                 RatingBarIndicator(
@@ -243,40 +265,7 @@ class DetailPageState extends State<DetailPage> {
                   SizedBox(
                     height: 15,
                   ),
-              Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shadowColor: Colors.transparent,
-                    primary: Colors.grey[100],
-                    shape: CircleBorder(),
-                    padding: EdgeInsets.all(20),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.cart_fill_badge_plus,
-                    size: 30,
-                    color: kPrimaryLightColor,
-                  ),
-                  onPressed: () {
-                    showSnackBar('Barang berhasil dimasukkan cart!');
-                  },
-                ),
-                SizedBox(width: 15),
-                Expanded(
-                    child: ElevatedButton(
-                        onPressed: () {
-                          totalBayar>0 ? _showModalBottomSheet() : null;
-                        },
-                        style: ElevatedButton.styleFrom(
-                          primary: totalBayar>0 ? kPrimaryLightColor : Colors.grey,
-                          shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(30.0),
-                          ),
-                          padding: EdgeInsets.all(15),
-                        ),
-                        child: Text('Beli',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold))))
-              ]),
+
 
             ]))
       ]),

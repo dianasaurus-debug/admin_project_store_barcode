@@ -9,6 +9,7 @@ import 'package:ghulam_app/screens/product_detail.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
+import 'package:ghulam_app/widgets/second_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -49,90 +50,89 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.clear, color: Colors.grey, size: 40),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          centerTitle: true,
-          title: Text('Daftar Pesanan', style: TextStyle(color: Colors.black, fontSize : 20),),
-          elevation: 0,
-          backgroundColor: Color(0xffffffff),
-        ),
+      appBar: SecondAppBar(
+        appBar: AppBar(),
+        isAuth: authAppBar,
+        title: 'History Transaksi',
+      ),
         body:
         isAuth != 2 ? (isAuth==1 ?
         FutureBuilder<List<Order>>(
             future: futureListOrder,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return GestureDetector(
-                        child: Card(
-                          elevation: 8.0,
-                          margin: new EdgeInsets.symmetric(
-                              horizontal: 10.0, vertical: 6.0),
-                          child: Container(
-                            // decoration: BoxDecoration(color: Color.fromRGBO(64, 75, 96, .9)),
-                            child: ListTile(
-                                contentPadding:
-                                EdgeInsets.symmetric(
-                                    horizontal: 7.0,
-                                    vertical: 5.0),
-                                title: Row(
-                                    children : [
-                                      Text('Total: '),
-                                      SizedBox(width : 5),
-                                      Text(
-                                          '${formatCurrency.format(int.parse(snapshot.data![index].total))}',
-                                          style: TextStyle(
-                                              fontSize: 13,
-                                              color:
-                                              Colors.redAccent,
-                                              fontWeight:
-                                              FontWeight.bold))
-                                    ]
-                                ),
-                                subtitle : Column(
-                                    children : [
-                                      Row(
-                                          children : [
-                                            Text('Status: '),
-                                            SizedBox(width : 5),
-                                            snapshot.data![index].status == 1 ? Text('Lunas') : Text('Belum Lunas')
-                                          ]
-                                      ),
-                                      SizedBox(width : 10),
-                                      for(var i =0;i<snapshot.data![index].products!.length;i++)
+                if(snapshot.data!.length>0){
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return GestureDetector(
+                          child: Card(
+                            elevation: 8.0,
+                            margin: new EdgeInsets.symmetric(
+                                horizontal: 10.0, vertical: 6.0),
+                            child: Container(
+                              // decoration: BoxDecoration(color: Color.fromRGBO(64, 75, 96, .9)),
+                              child: ListTile(
+                                  contentPadding:
+                                  EdgeInsets.symmetric(
+                                      horizontal: 7.0,
+                                      vertical: 5.0),
+                                  title: Row(
+                                      children : [
+                                        Text('Total: '),
+                                        SizedBox(width : 5),
+                                        Text(
+                                            '${formatCurrency.format(int.parse(snapshot.data![index].total))}',
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color:
+                                                Colors.redAccent,
+                                                fontWeight:
+                                                FontWeight.bold))
+                                      ]
+                                  ),
+                                  subtitle : Column(
+                                      children : [
                                         Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('${snapshot.data![index].products![i].nama_barang}'),
-                                            SizedBox(width: 5),
-                                            Expanded(
-                                                child: Text('${snapshot.data![index].products![i].jumlah}x')
-                                            )
-                                          ],
-                                        )
-                                    ]
-                                )
-                              // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
+                                            children : [
+                                              Text('Status: '),
+                                              SizedBox(width : 5),
+                                              snapshot.data![index].status == 1 ? Text('Lunas') : Text('Belum Lunas')
+                                            ]
+                                        ),
+                                        SizedBox(width : 10),
+                                        for(var i =0;i<snapshot.data![index].products!.length;i++)
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('${snapshot.data![index].products![i].nama_barang}'),
+                                              SizedBox(width: 5),
+                                              Expanded(
+                                                  child: Text('${snapshot.data![index].products![i].jumlah}x')
+                                              )
+                                            ],
+                                          )
+                                      ]
+                                  )
+                                // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
+                              ),
                             ),
-                          ),
 
-                        ),
-                        onTap: () => {
-                          // Navigator.push(
-                          //   context,
-                          //   new MaterialPageRoute(
-                          //   builder: (context) => ProductDetail(id_order : snapshot.data![index].id)
-                          //   ),
-                          // )
-                        },
-                      );
-                    });
+                          ),
+                          onTap: () => {
+                            // Navigator.push(
+                            //   context,
+                            //   new MaterialPageRoute(
+                            //   builder: (context) => ProductDetail(id_order : snapshot.data![index].id)
+                            //   ),
+                            // )
+                          },
+                        );
+                      });
+                } else {
+                  return Center(child: Text('Tidak ada data transaksi'));
+                }
               } else if (snapshot.hasError) {
                 print(snapshot.hasData);
                 return Text("Error : ${snapshot}");
@@ -150,7 +150,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   SizedBox(
                       height : 10
                   ),
-                  Text('Silahkan login atau daftar untuk melihat profil', style: TextStyle(fontSize: 20, fontWeight : FontWeight.bold, ), textAlign: TextAlign.center),
+                  Text('Silahkan login atau daftar untuk melihat data pesanan', style: TextStyle(fontSize: 20, fontWeight : FontWeight.bold, ), textAlign: TextAlign.center),
                   SizedBox(
                       height : 20
                   ),
