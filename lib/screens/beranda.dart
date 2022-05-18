@@ -47,7 +47,6 @@ class HomePageState extends State<HomePage> {
   late Future<List<Category>> futureListCategoryNew;
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  bool isAuth = false;
   var idSelected = 0;
   List<Product> usedProducts = [];
   List<Category> usedCategory = [];
@@ -58,6 +57,8 @@ class HomePageState extends State<HomePage> {
   Category rekomenKategori = Category( '', 0);
   var rekomenSubKategori = 1;
   var _isLoading = false;
+  int isAuth = 2;
+  bool authAppBar = false;
 
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -66,16 +67,17 @@ class HomePageState extends State<HomePage> {
         setState(() {
           _isLoading = true;
         });
-
           var res = await AuthController().getData('/profile');
           var body = json.decode(res.body);
           if (body['success']) {
             setState(() {
-              isAuth = true;
+              isAuth = 1;
+              authAppBar = true;
             });
           } else {
             setState(() {
-              isAuth = true;
+              isAuth = 1;
+              authAppBar = true;
             });
             Navigator.push(
               context,
@@ -88,7 +90,8 @@ class HomePageState extends State<HomePage> {
 
     } else {
       setState(() {
-        isAuth = false;
+        isAuth = 0;
+        authAppBar = false;
       });
     }
   }
@@ -113,7 +116,7 @@ class HomePageState extends State<HomePage> {
       primary: kPrimaryColor,
     );
     return Scaffold(
-      appBar: BaseAppBar(appBar: AppBar(), isAuth: isAuth),
+      appBar: BaseAppBar(appBar: AppBar(), isAuth: authAppBar),
       body:
           RefreshIndicator(
               color: Colors.white,

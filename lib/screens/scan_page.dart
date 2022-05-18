@@ -28,41 +28,24 @@ class _ScanPageState extends State<ScanPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   var array_of_kode_barang = [];
-  bool isAuth = false;
+
   var _isLoading = false;
+
+  int isAuth = 2;
+  bool authAppBar = false;
 
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     var token = localStorage.getString('token');
     if (token != null) {
       setState(() {
-        _isLoading = true;
+        isAuth = 1;
+        authAppBar = true;
       });
-
-      var res = await AuthController().getData('/profile');
-      var body = json.decode(res.body);
-      if (body['success']) {
-        setState(() {
-          isAuth = true;
-        });
-      } else {
-        setState(() {
-          isAuth = true;
-        });
-        showSnackBar('Silahkan login terlebih dahulu');
-        Navigator.push(
-          context,
-          new MaterialPageRoute(builder: (context) => LoginIndexPage()),
-        );
-      }
+    } else {
       setState(() {
-        _isLoading = false;
-      });
-
-    }
-    else {
-      setState(() {
-        isAuth = false;
+        isAuth = 0;
+        authAppBar = false;
       });
     }
   }

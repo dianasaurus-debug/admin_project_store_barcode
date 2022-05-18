@@ -76,10 +76,7 @@ class RecommendationState extends State<Recommendation> {
               future: futureListProduct,
               builder: (context, products) {
                 if (products.hasData) {
-                  return Container(
-                        height: MediaQuery.of(context).size.height * (0.53),
-                        child: SingleChildScrollView(
-                            child: products.data!.length > 0
+                  return products.data!.length > 0
                                 ?
                             ListView.builder(
                               scrollDirection: Axis.vertical,
@@ -220,7 +217,7 @@ class RecommendationState extends State<Recommendation> {
                                       fontSize: 15,
                                       fontWeight: FontWeight.w100,
                                       color: kPrimaryColor)),
-                            )));
+                            );
                 } else if (products.hasError) {
                   return Text("${products.error}");
                 }

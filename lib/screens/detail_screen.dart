@@ -8,6 +8,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/product.dart';
+import 'package:ghulam_app/screens/cart.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -132,7 +133,7 @@ class DetailPageState extends State<DetailPage> {
                           color: kPrimaryLightColor,
                         ),
                         onPressed: () {
-                          showSnackBar('Barang berhasil dimasukkan cart!');
+                          _add_to_cart(widget.product!.id);
                         },
                       )
                     ]
@@ -392,6 +393,40 @@ class DetailPageState extends State<DetailPage> {
       });
     }
 
+  }
+  void _add_to_cart(id) async{
+    var data = {
+      'product_id' : id,
+      'jumlah' : _jumlahBarang,
+    };
+    var res = await AuthController().postData(data, '/cart/add');
+    var body = json.decode(res.body);
+    print(data);
+    if(body['success']){
+      Navigator.push(
+        context,
+        new MaterialPageRoute(
+            builder: (context) => CartPage()
+        ),
+      );
+    }else{
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal Menambahkan ke cart!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
   }
 
 }

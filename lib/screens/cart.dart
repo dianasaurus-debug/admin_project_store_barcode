@@ -30,13 +30,13 @@ class CartPageState extends State<CartPage> {
   late Future<List<Cart>> futureListProduct;
   late Future<User> futureUser;
   var array_of_orders = [];
-  int isAuth = 2;
   var jumlah_barang = [];
   var jumlah = [];
   var harga_barang = [];
   var id_barang = [];
 
   var total = 0;
+  int isAuth = 2;
   bool authAppBar = false;
 
   void _checkIfLoggedIn() async {
@@ -144,6 +144,8 @@ class CartPageState extends State<CartPage> {
                                       title: Text(
                                         snapshot.data![index].product!
                                             .nama_barang,
+                                        softWrap: false,
+                                        overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold),
@@ -185,14 +187,43 @@ class CartPageState extends State<CartPage> {
                                                         color:
                                                         kPrimaryLightColor,
                                                       ),
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          jumlah_barang[index] =jumlah_barang[index] - 1;
+                                                      onPressed: () async {
+                                                        var data = {
+                                                          'product_id' : snapshot.data![index].product!.id,
+                                                          'jumlah' : jumlah[index],
+                                                        };
+                                                        var res = await AuthController().postData(data, '/cart/add');
+                                                        var body = json.decode(res.body);
+                                                        print(data);
+                                                        if(body['success']){
+                                                          setState(() {
+                                                            jumlah_barang[index] =jumlah_barang[index] - 1;
+                                                          });
                                                           if(snapshot.data![index].is_scanned==1){
-                                                            jumlah[index] = jumlah[index] - 1;
-                                                            total = total - int.parse(snapshot.data![index].product!.harga_jual);
+                                                            setState(() {
+                                                              jumlah[index] = jumlah[index] - 1;
+                                                              total = total- int.parse(snapshot.data![index].product!.harga_jual);
+                                                            });
+
                                                           }
-                                                        });
+                                                        }else{
+                                                          Alert(
+                                                            context: context,
+                                                            type: AlertType.error,
+                                                            title: "Gagal Menambahkan ke cart!",
+                                                            desc: body['message'],
+                                                            buttons: [
+                                                              DialogButton(
+                                                                child: const Text(
+                                                                  "OK",
+                                                                  style: TextStyle(color: Colors.white, fontSize: 20),
+                                                                ),
+                                                                onPressed: () => Navigator.pop(context),
+                                                                width: 120,
+                                                              )
+                                                            ],
+                                                          ).show();
+                                                        }
                                                       },
                                                     ),
                                                     Text(
@@ -228,22 +259,54 @@ class CartPageState extends State<CartPage> {
                                                         color:
                                                         kPrimaryLightColor,
                                                       ),
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          jumlah_barang[index] = jumlah_barang[index] + 1;
+                                                      onPressed: () async {
+                                                        var data = {
+                                                          'product_id' : snapshot.data![index].product!.id,
+                                                          'jumlah' : jumlah[index],
+                                                        };
+                                                        var res = await AuthController().postData(data, '/cart/add');
+                                                        var body = json.decode(res.body);
+                                                        print(data);
+                                                        if(body['success']){
+                                                          setState(() {
+                                                            jumlah_barang[index] =jumlah_barang[index] + 1;
+                                                          });
                                                           if(snapshot.data![index].is_scanned==1){
-                                                            jumlah[index] = jumlah[index] + 1;
-                                                            total = total + int.parse(snapshot.data![index].product!.harga_jual);
+                                                            setState(() {
+                                                              jumlah[index] = jumlah[index] + 1;
+                                                              total = total+ int.parse(snapshot.data![index].product!.harga_jual);
+                                                            });
                                                           }
-                                                        });
+                                                        }else{
+                                                          Alert(
+                                                            context: context,
+                                                            type: AlertType.error,
+                                                            title: "Gagal Menambahkan ke cart!",
+                                                            desc: body['message'],
+                                                            buttons: [
+                                                              DialogButton(
+                                                                child: const Text(
+                                                                  "OK",
+                                                                  style: TextStyle(color: Colors.white, fontSize: 20),
+                                                                ),
+                                                                onPressed: () => Navigator.pop(context),
+                                                                width: 120,
+                                                              )
+                                                            ],
+                                                          ).show();
+                                                        }
                                                       },
                                                     ),
                                                   ]),
+                                              TextButton(
+                                                child : Text('Hapus', style : TextStyle(color : Colors.red)),
+                                                onPressed:  (){
+                                                  remove(snapshot.data![index].id);
+                                                },
+                                              )
                                             ])
                                           ]),
-                                      trailing: snapshot.data![index]
-                                          .is_scanned ==
-                                          0
+                                      trailing: snapshot.data![index].is_scanned == 0
                                           ? Column(children: [
                                         if (userData.data!.saldo !=
                                             null &&
@@ -428,6 +491,33 @@ class CartPageState extends State<CartPage> {
       ).show();
     }
   }
+  void remove(id) async {
+    var res = await AuthController().deleteData({}, '/cart/delete/${id}');
+    var body = json.decode(res.body);
+    print(body);
+    if (body['success']) {
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (BuildContext context) => super.widget));
+    } else {
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal hapus produk!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+  }
+
   void checkout() async{
     var array_of_orders = [];
     for(var i=0;i<id_barang.length;i++){
@@ -470,4 +560,6 @@ class CartPageState extends State<CartPage> {
       ).show();
     }
   }
+
+
 }

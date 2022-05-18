@@ -1,20 +1,26 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/category_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/cart.dart';
 import 'package:ghulam_app/models/category.dart';
 import 'package:ghulam_app/models/parameter.dart';
 import 'package:ghulam_app/models/sub_category.dart';
+import 'package:ghulam_app/screens/cart.dart';
 import 'package:ghulam_app/screens/detail_screen.dart';
 import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/qr_view.dart';
+import 'package:ghulam_app/screens/product_detail.dart';
 import 'package:ghulam_app/screens/recommendations.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/app_bar.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/second_app_bar.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -32,11 +38,16 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
   var rekomenHarga = 1;
   var rekomenRating = 1;
   var rekomenSupplier = 1;
+  var array_of_orders = [];
+  var jumlah = [];
+  var harga_barang = [];
+  var id_barang = [];
+  var jumlah_barang = [];
+
   Category rekomenKategori = Category( '', 0);
   var rekomenSubKategori = 1;
   var _isLoading = false;
   int isAuth = 2;
-  var jumlah_barang = [];
   bool authAppBar = false;
   void _checkIfLoggedIn() async{
     SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -84,10 +95,20 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
               WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
                 ///This schedules the callback to be executed in the next frame
                 /// thus avoiding calling setState during build
-                for(var i=0;i<snapshot.data!.length;i++){
-                  setState(() {
-                    jumlah_barang.add(snapshot.data![i].jumlah);
-                  });
+                for (var i = 0; i < snapshot.data!.length; i++) {
+                  if(jumlah_barang.length<snapshot.data!.length){
+                    setState(() {
+                      jumlah_barang.add(snapshot.data![i].jumlah);
+                    });
+                    if(snapshot.data![i].is_scanned==1){
+                      setState(() {
+                        jumlah.add(snapshot.data![i].jumlah);
+                        harga_barang.add(snapshot.data![i].product!.harga_jual);
+                        id_barang.add(snapshot.data![i].product!.id);
+                      });
+                    }
+                  }
+
                 }
               });
               if(jumlah_barang.length!=0){
@@ -98,7 +119,11 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
                         shrinkWrap: true,
                         itemCount: snapshot.data!.length,
                         itemBuilder: (BuildContext context, int index) {
-                          return ListTile(title: Text('${snapshot.data![index].product!.nama_barang}', style: TextStyle(
+                          return ListTile(
+                              title: Text('${snapshot.data![index].product!.nama_barang}',
+                                  softWrap: false,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: kPrimaryColor,
                               fontSize: 15)),
@@ -134,10 +159,35 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
                                         size: 12,
                                         color: kPrimaryLightColor,
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async {
                                         setState(() {
-                                          jumlah_barang[index] = jumlah_barang[index]-1;
+                                          jumlah_barang[index] =jumlah_barang[index] - 1;
                                         });
+                                        var data = {
+                                          'product_id' : snapshot.data![index].product!.id,
+                                          'jumlah' : jumlah_barang[index],
+                                        };
+                                        var res = await AuthController().postData(data, '/cart/add');
+                                        var body = json.decode(res.body);
+                                        print(data);
+                                        if(!body['success']){
+                                          Alert(
+                                            context: context,
+                                            type: AlertType.error,
+                                            title: "Gagal Menambahkan ke cart!",
+                                            desc: body['message'],
+                                            buttons: [
+                                              DialogButton(
+                                                child: const Text(
+                                                  "OK",
+                                                  style: TextStyle(color: Colors.white, fontSize: 20),
+                                                ),
+                                                onPressed: () => Navigator.pop(context),
+                                                width: 120,
+                                              )
+                                            ],
+                                          ).show();
+                                        }
                                       },
                                     ),
                                     Text(
@@ -160,10 +210,35 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
                                         size: 12,
                                         color: kPrimaryLightColor,
                                       ),
-                                      onPressed: () {
+                                      onPressed: () async {
                                         setState(() {
-                                          jumlah_barang[index] = jumlah_barang[index]+1;
+                                          jumlah_barang[index] =jumlah_barang[index] + 1;
                                         });
+                                        var data = {
+                                          'product_id' : snapshot.data![index].product!.id,
+                                          'jumlah' : jumlah_barang[index],
+                                        };
+                                        var res = await AuthController().postData(data, '/cart/add');
+                                        var body = json.decode(res.body);
+                                        print(data);
+                                        if(!body['success']){
+                                          Alert(
+                                            context: context,
+                                            type: AlertType.error,
+                                            title: "Gagal Menambahkan ke cart!",
+                                            desc: body['message'],
+                                            buttons: [
+                                              DialogButton(
+                                                child: const Text(
+                                                  "OK",
+                                                  style: TextStyle(color: Colors.white, fontSize: 20),
+                                                ),
+                                                onPressed: () => Navigator.pop(context),
+                                                width: 120,
+                                              )
+                                            ],
+                                          ).show();
+                                        }
                                       },
                                     ),
                                   ]
@@ -532,8 +607,13 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
                                   SizedBox(width : 5),
                                   ElevatedButton(
                                       onPressed: () {
-                                        // _showModalBottomSheet();
-                                      },
+                                        Navigator.push(
+                                          context,
+                                          new MaterialPageRoute(
+                                              builder: (context) => CartPage()
+                                          )
+                                        );
+                                        },
                                       style: ElevatedButton.styleFrom(
                                         primary: Colors.blue,
                                         shape: new RoundedRectangleBorder(
@@ -541,7 +621,7 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
                                         ),
                                         padding: EdgeInsets.all(8),
                                       ),
-                                      child: Text('Tidak, Checkout saja',
+                                      child: Text('Sudah',
                                           style: TextStyle(
                                               fontSize: 15, fontWeight: FontWeight.bold)))
                                 ]
@@ -574,4 +654,5 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
       new MaterialPageRoute(builder: (context) => Recommendation(data: data)),
     );
   }
+
 }
