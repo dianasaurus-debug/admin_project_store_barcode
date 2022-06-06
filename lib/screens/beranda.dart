@@ -587,7 +587,7 @@ class HomePageState extends State<HomePage> {
                                   }),
                             ),
                             Container(
-                                height: MediaQuery.of(context).size.height * (0.53),
+                                height: MediaQuery.of(context).size.height * (0.6),
                                 child: SingleChildScrollView(
                                     child: usedProducts.length > 0
                                         ? GridView.builder(

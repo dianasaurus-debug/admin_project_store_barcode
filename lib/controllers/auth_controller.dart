@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -84,6 +87,45 @@ class AuthController {
         headers: _setHeaders()
     );
   }
+  updateProfile(File? image, data, apiUrl) async {
+    var fullUrl = API_URL + apiUrl;
+    await _getToken();
+
+    FormData formData;
+    if(image!=null){
+      print('gak null');
+      String fileName = image.path.split('/').last;
+      formData = FormData.fromMap({
+        "photo": await MultipartFile.fromFile(image.path, filename:fileName),
+        "first_name" : data["first_name"],
+        "last_name" : data["last_name"],
+        "email" : data["email"],
+        "phone" : data["phone"],
+        "_method" : "PUT"
+      }
+      );
+    } else {
+      print('null');
+      formData = FormData.fromMap({
+        "first_name" : data["first_name"],
+        "last_name" : data["last_name"],
+        "email" : data["email"],
+        "phone" : data["phone"],
+        "_method" : "PUT"
+      }
+      );
+    }
+    Dio dio = new Dio();
+    var headers = {
+      'accept': 'application/json',
+      'Authorization' : 'Bearer $token',
+      'Content-Type': 'multipart/form-data'
+    };
+    var response = await dio.post(fullUrl, data: formData, options: Options(method: "POST", headers: headers));
+    print(response.data);
+    return response.data;
+  }
+
 
   _setHeaders() => {
     'Content-type' : 'application/json',

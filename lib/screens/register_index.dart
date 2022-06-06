@@ -160,7 +160,7 @@ class _RegisterIndexPageState extends State<RegisterIndexPage> {
                                 // The validator receives the text that the user has entered.
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'E-Mail tidak boleh kosong';
+                                    return 'Nomor Telepon tidak boleh kosong';
                                   }
                                   phone = value;
 

@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/order.dart';
+import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/screens/product_detail.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/second_app_bar.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -78,21 +82,24 @@ class _HistoryPageState extends State<HistoryPage> {
                                   EdgeInsets.symmetric(
                                       horizontal: 7.0,
                                       vertical: 5.0),
-                                  title: Row(
-                                      children : [
-                                        Text('Total: '),
-                                        SizedBox(width : 5),
-                                        Text(
-                                            '${formatCurrency.format(int.parse(snapshot.data![index].total))}',
-                                            style: TextStyle(
-                                                fontSize: 13,
-                                                color:
-                                                Colors.redAccent,
-                                                fontWeight:
-                                                FontWeight.bold))
-                                      ]
-                                  ),
+                                  title:
+                                      Row(
+                                          children : [
+                                            Text('Total: '),
+                                            SizedBox(width : 5),
+                                            Text(
+                                                '${formatCurrency.format(int.parse(snapshot.data![index].total))}',
+                                                style: TextStyle(
+                                                    fontSize: 13,
+                                                    color:
+                                                    Colors.redAccent,
+                                                    fontWeight:
+                                                    FontWeight.bold))
+                                          ]
+                                      ),
+
                                   subtitle : Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                       children : [
                                         Row(
                                             children : [
@@ -101,20 +108,49 @@ class _HistoryPageState extends State<HistoryPage> {
                                               snapshot.data![index].status == 1 ? Text('Lunas') : Text('Belum Lunas')
                                             ]
                                         ),
-                                        SizedBox(width : 10),
+                                        Text('Tanggal : ${ parseDate(snapshot.data![index].created_at)}'),
+                                        Text('List Produk', style: TextStyle(fontWeight: FontWeight.bold),),
                                         for(var i =0;i<snapshot.data![index].products!.length;i++)
                                           Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
                                             children: [
+                                              Padding(padding: EdgeInsets.symmetric(horizontal: 2), child : Icon(Icons.fiber_manual_record, size: 10,)),
                                               Text('${snapshot.data![index].products![i].nama_barang}'),
                                               SizedBox(width: 5),
                                               Expanded(
                                                   child: Text('${snapshot.data![index].products![i].jumlah}x')
                                               )
                                             ],
-                                          )
+                                          ),
+
+
                                       ]
-                                  )
+                                  ),
+                                  trailing: snapshot.data![index].status == 1 ? Icon(Icons.check, color : kPrimaryColor) : ElevatedButton(
+                                      onPressed: () {
+                                       pay(snapshot.data![index].id);
+                                      },
+                                      style: ElevatedButton
+                                          .styleFrom(
+                                        primary:
+                                        kPrimaryLightColor,
+                                        shape:
+                                        new RoundedRectangleBorder(
+                                          borderRadius:
+                                          new BorderRadius
+                                              .circular(
+                                              30.0),
+                                        ),
+                                        padding:
+                                        EdgeInsets.all(
+                                            5),
+                                      ),
+                                      child: Text('Bayar',
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight:
+                                              FontWeight
+                                                  .bold)))
                                 // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
                               ),
                             ),
@@ -212,4 +248,58 @@ class _HistoryPageState extends State<HistoryPage> {
       bottomNavigationBar: BottomNavbar(current : 2),
     );
   }
+  dynamic parseDate(date){
+    DateTime parseDate =
+    new DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date);
+    var inputDate = DateTime.parse(parseDate.toString());
+    var outputFormat = DateFormat('dd/MM/yyyy hh:mm');
+    var outputDate = outputFormat.format(inputDate);
+    return outputDate;
+  }
+  void pay(id) async {
+    var res = await AuthController().getData('/order/pay/${id}');
+    var body = json.decode(res.body);
+    print(body);
+    if (body['success']) {
+      Alert(
+        context: context,
+        type: AlertType.success,
+        title: "Berhasil membayar produk!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HistoryPage()),
+              )
+            },
+            width: 120,
+          )
+        ],
+      ).show();
+    } else {
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal membayar produk!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+  }
+
 }

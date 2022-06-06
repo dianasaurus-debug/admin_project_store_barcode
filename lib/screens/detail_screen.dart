@@ -9,9 +9,11 @@ import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/screens/cart.dart';
+import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailPage extends StatefulWidget {
   final Product? product;
@@ -28,6 +30,44 @@ class DetailPageState extends State<DetailPage> {
   var isPressed = false;
   int _jumlahBarang = 0;
   int totalBayar = 0;
+  int isAuth = 2;
+  bool authAppBar = false;
+
+  void _checkIfLoggedIn() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    var token = localStorage.getString('token');
+    if (token != null) {
+      setState(() {
+        _isLoading = true;
+      });
+      var res = await AuthController().getData('/profile');
+      var body = json.decode(res.body);
+      if (body['success']) {
+        setState(() {
+          isAuth = 1;
+          authAppBar = true;
+        });
+      } else {
+        setState(() {
+          isAuth = 1;
+          authAppBar = true;
+        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginIndexPage()),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+
+    } else {
+      setState(() {
+        isAuth = 0;
+        authAppBar = false;
+      });
+    }
+  }
   void _is_in_wishlist(id) async {
     var res = await AuthController().getData('/wishlist/exist/${id}');
     var body = json.decode(res.body);
@@ -49,6 +89,7 @@ class DetailPageState extends State<DetailPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _checkIfLoggedIn();
     _is_in_wishlist(widget.product!.id);
   }
 
@@ -66,20 +107,36 @@ class DetailPageState extends State<DetailPage> {
         ),
         centerTitle: true,
         actions: [
+          isAuth == 1 ?
           Padding(
-            padding: const EdgeInsets.all(10),
-            child: IconButton(
-                icon: Icon(
-                  Icons.favorite,
-                  color: (isPressed) ? Colors.pink : Colors.pink[100],
-                  size: 30,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _add_to_wishlist(widget.product!.id);
-                  });
-                }),
-          )
+              padding: const EdgeInsets.all(10),
+              child:
+              Row(
+                children : [
+                  IconButton(
+                        icon: Icon(
+                          Icons.favorite,
+                          color: (isPressed) ? Colors.pink : Colors.pink[100],
+                          size: 30,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _add_to_wishlist(widget.product!.id);
+                          });
+                        }),
+                  IconButton(
+                    icon: Icon(
+                      CupertinoIcons.cart_fill_badge_plus,
+                      size: 25,
+                      color: kPrimaryLightColor,
+                    ),
+                    onPressed: () {
+                      _add_to_cart(widget.product!.id);
+                    },
+                  )
+
+                ]
+              )) : Container()
         ],
         elevation: 0,
         backgroundColor: Color(0xffffffff),
@@ -120,22 +177,6 @@ class DetailPageState extends State<DetailPage> {
                             color: kPrimaryColor,
                             fontSize: 20),
                       ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shadowColor: Colors.transparent,
-                          primary: Colors.grey[100],
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(10),
-                        ),
-                        child: Icon(
-                          CupertinoIcons.cart_fill_badge_plus,
-                          size: 25,
-                          color: kPrimaryLightColor,
-                        ),
-                        onPressed: () {
-                          _add_to_cart(widget.product!.id);
-                        },
-                      )
                     ]
                   ),
 
@@ -399,34 +440,39 @@ class DetailPageState extends State<DetailPage> {
       'product_id' : id,
       'jumlah' : _jumlahBarang,
     };
-    var res = await AuthController().postData(data, '/cart/add');
-    var body = json.decode(res.body);
-    print(data);
-    if(body['success']){
-      Navigator.push(
-        context,
-        new MaterialPageRoute(
-            builder: (context) => CartPage()
-        ),
-      );
-    }else{
-      Alert(
-        context: context,
-        type: AlertType.error,
-        title: "Gagal Menambahkan ke cart!",
-        desc: body['message'],
-        buttons: [
-          DialogButton(
-            child: const Text(
-              "OK",
-              style: TextStyle(color: Colors.white, fontSize: 20),
-            ),
-            onPressed: () => Navigator.pop(context),
-            width: 120,
-          )
-        ],
-      ).show();
+    if(isAuth==1){
+      var res = await AuthController().postData(data, '/cart/add');
+      var body = json.decode(res.body);
+      print(data);
+      if(body['success']){
+        Navigator.push(
+          context,
+          new MaterialPageRoute(
+              builder: (context) => CartPage()
+          ),
+        );
+      }else{
+        Alert(
+          context: context,
+          type: AlertType.error,
+          title: "Gagal Menambahkan ke cart!",
+          desc: body['message'],
+          buttons: [
+            DialogButton(
+              child: const Text(
+                "OK",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              onPressed: () => Navigator.pop(context),
+              width: 120,
+            )
+          ],
+        ).show();
+      }
+    } else {
+      showSnackBar('Mohon login terlebih dahulu untuk menambahkan ke cart!');
     }
+
   }
 
 }
