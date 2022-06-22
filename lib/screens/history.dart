@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/order.dart';
@@ -12,7 +16,11 @@ import 'package:ghulam_app/screens/product_detail.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
+import 'package:ghulam_app/widgets/download_alert.dart';
+import 'package:ghulam_app/widgets/pdf_reader.dart';
 import 'package:ghulam_app/widgets/second_app_bar.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -24,6 +32,16 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  // Track the progress of a downloaded file here.
+  double progress = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
+  // Track if the PDF was downloaded here.
+  bool didDownloadPDF = false;
+
+  // Show the progress status to the user.
+  String progressString = 'File has not been downloaded yet.';
+
   final _formKey = GlobalKey<FormState>();
   final formatCurrency = new NumberFormat.simpleCurrency(locale: 'id_ID');
 
@@ -54,6 +72,7 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: SecondAppBar(
         appBar: AppBar(),
         isAuth: authAppBar,
@@ -66,106 +85,156 @@ class _HistoryPageState extends State<HistoryPage> {
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 if(snapshot.data!.length>0){
-                  return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return GestureDetector(
-                          child: Card(
-                            elevation: 8.0,
-                            margin: new EdgeInsets.symmetric(
-                                horizontal: 10.0, vertical: 6.0),
-                            child: Container(
-                              // decoration: BoxDecoration(color: Color.fromRGBO(64, 75, 96, .9)),
-                              child: ListTile(
-                                  contentPadding:
-                                  EdgeInsets.symmetric(
-                                      horizontal: 7.0,
-                                      vertical: 5.0),
-                                  title:
-                                      Row(
-                                          children : [
-                                            Text('Total: '),
-                                            SizedBox(width : 5),
-                                            Text(
-                                                '${formatCurrency.format(int.parse(snapshot.data![index].total))}',
-                                                style: TextStyle(
-                                                    fontSize: 13,
-                                                    color:
-                                                    Colors.redAccent,
-                                                    fontWeight:
-                                                    FontWeight.bold))
-                                          ]
-                                      ),
-
-                                  subtitle : Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                      children : [
-                                        Row(
-                                            children : [
-                                              Text('Status: '),
-                                              SizedBox(width : 5),
-                                              snapshot.data![index].status == 1 ? Text('Lunas') : Text('Belum Lunas')
-                                            ]
-                                        ),
-                                        Text('Tanggal : ${ parseDate(snapshot.data![index].created_at)}'),
-                                        Text('List Produk', style: TextStyle(fontWeight: FontWeight.bold),),
-                                        for(var i =0;i<snapshot.data![index].products!.length;i++)
+                  return Column(
+                      children : [
+                        Expanded(
+                          child : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return GestureDetector(
+                                  child: Card(
+                                    elevation: 8.0,
+                                    margin: new EdgeInsets.symmetric(
+                                        horizontal: 10.0, vertical: 6.0),
+                                    child: Container(
+                                      // decoration: BoxDecoration(color: Color.fromRGBO(64, 75, 96, .9)),
+                                      child: ListTile(
+                                          contentPadding:
+                                          EdgeInsets.symmetric(
+                                              horizontal: 7.0,
+                                              vertical: 5.0),
+                                          title:
                                           Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              Padding(padding: EdgeInsets.symmetric(horizontal: 2), child : Icon(Icons.fiber_manual_record, size: 10,)),
-                                              Text('${snapshot.data![index].products![i].nama_barang}'),
-                                              SizedBox(width: 5),
-                                              Expanded(
-                                                  child: Text('${snapshot.data![index].products![i].jumlah}x')
-                                              )
-                                            ],
+                                              children : [
+                                                Text('Total: '),
+                                                SizedBox(width : 5),
+                                                Text(
+                                                    '${formatCurrency.format(int.parse(snapshot.data![index].total))}',
+                                                    style: TextStyle(
+                                                        fontSize: 13,
+                                                        color:
+                                                        Colors.redAccent,
+                                                        fontWeight:
+                                                        FontWeight.bold))
+                                              ]
                                           ),
 
+                                          subtitle : Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children : [
+                                                Row(
+                                                    children : [
+                                                      Text('Status: '),
+                                                      SizedBox(width : 5),
+                                                      snapshot.data![index].status == 1 ? Text('Lunas') : Text('Belum Lunas')
+                                                    ]
+                                                ),
+                                                Text('Tanggal : ${ parseDate(snapshot.data![index].created_at)}'),
+                                                Text('List Produk', style: TextStyle(fontWeight: FontWeight.bold),),
+                                                for(var i =0;i<snapshot.data![index].products!.length;i++)
+                                                  Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    children: [
+                                                      Padding(padding: EdgeInsets.symmetric(horizontal: 2), child : Icon(Icons.fiber_manual_record, size: 10,)),
+                                                      Expanded(
+                                                        child :Text('${snapshot.data![index].products![i].nama_barang} ${snapshot.data![index].products![i].jumlah}x'),
+                                                      )
 
-                                      ]
-                                  ),
-                                  trailing: snapshot.data![index].status == 1 ? Icon(Icons.check, color : kPrimaryColor) : ElevatedButton(
-                                      onPressed: () {
-                                       pay(snapshot.data![index].id);
-                                      },
-                                      style: ElevatedButton
-                                          .styleFrom(
-                                        primary:
-                                        kPrimaryLightColor,
-                                        shape:
-                                        new RoundedRectangleBorder(
-                                          borderRadius:
-                                          new BorderRadius
-                                              .circular(
-                                              30.0),
-                                        ),
-                                        padding:
-                                        EdgeInsets.all(
-                                            5),
+                                                    ],
+                                                  ),
+
+
+                                              ]
+                                          ),
+                                          trailing: snapshot.data![index].status == 1 ? ElevatedButton(
+                                              onPressed: () async {
+                                                downloadFile(context, '${API_URL}/order/nota/${snapshot.data![index].id}', 'nota.pdf');
+                                              },
+                                              style: ElevatedButton
+                                                  .styleFrom(primary: kPrimaryColor,
+                                                shape: new RoundedRectangleBorder(
+                                                  borderRadius: new BorderRadius.circular(30.0),
+                                                ),
+                                                padding: EdgeInsets.all(2),
+                                              ),
+                                              child: Text('Nota',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                      FontWeight
+                                                          .bold))) : ElevatedButton(
+                                              onPressed: () {
+                                                pay(snapshot.data![index].id);
+                                              },
+                                              style: ElevatedButton
+                                                  .styleFrom(
+                                                primary:
+                                                kPrimaryLightColor,
+                                                shape:
+                                                new RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  new BorderRadius
+                                                      .circular(
+                                                      30.0),
+                                                ),
+                                                padding:
+                                                EdgeInsets.all(
+                                                    5),
+                                              ),
+                                              child: Text('Bayar',
+                                                  style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                      FontWeight
+                                                          .bold)))
+                                        // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
                                       ),
-                                      child: Text('Bayar',
-                                          style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight:
-                                              FontWeight
-                                                  .bold)))
-                                // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
-                              ),
-                            ),
+                                    ),
 
-                          ),
-                          onTap: () => {
-                            // Navigator.push(
-                            //   context,
-                            //   new MaterialPageRoute(
-                            //   builder: (context) => ProductDetail(id_order : snapshot.data![index].id)
-                            //   ),
-                            // )
-                          },
-                        );
-                      });
+                                  ),
+                                  onTap: () => {
+                                    // Navigator.push(
+                                    //   context,
+                                    //   new MaterialPageRoute(
+                                    //   builder: (context) => ProductDetail(id_order : snapshot.data![index].id)
+                                    //   ),
+                                    // )
+                                  },
+                                );
+                              })
+                        ),
+                        Padding(
+                          padding : EdgeInsets.all(10),
+                          child : Row(
+                              children : [
+                                Expanded(
+                                    child :ElevatedButton(
+                                        onPressed: () async {
+                                          downloadFile(context, '${API_URL}/order/all/nota', 'nota_all.pdf');
+                                        },
+                                        style: ElevatedButton
+                                            .styleFrom(primary: kPrimaryColor,
+                                          shape: new RoundedRectangleBorder(
+                                            borderRadius: new BorderRadius.circular(30.0),
+                                          ),
+
+                                          padding: EdgeInsets.all(3),
+                                        ),
+                                        child: Text('Nota Semua Transaksi',
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight:
+                                                FontWeight
+                                                    .bold)))
+                                )
+                              ]
+                          )
+                        )
+
+
+                      ]
+                    );
                 } else {
                   return Center(child: Text('Tidak ada data transaksi'));
                 }
@@ -247,6 +316,61 @@ class _HistoryPageState extends State<HistoryPage> {
       ,
       bottomNavigationBar: BottomNavbar(current : 2),
     );
+  }
+  Future downloadFile(BuildContext context, String url, String filename) async {
+    print(url);
+    PermissionStatus permission = await Permission.storage.status;
+
+    if (permission != PermissionStatus.granted) {
+      await Permission.storage.request();
+      // access media location needed for android 10/Q
+      await Permission.accessMediaLocation.request();
+      // manage external storage needed for android 11/R
+      await Permission.manageExternalStorage.request();
+      startDownload(context, url, filename);
+    } else {
+      startDownload(context, url, filename);
+    }
+  }
+
+  startDownload(BuildContext context, String url, String filename) async {
+    Directory? appDocDir =  Directory('/storage/emulated/0/Download');
+
+    String path = appDocDir.path + '/$filename';
+    print(path);
+    File file = File(path);
+    if (!await file.exists()) {
+      await file.create();
+    } else {
+      await file.delete();
+      await file.create();
+    }
+
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => DownloadAlert(
+        url: url,
+        path: path,
+      ),
+    ).then((v) {
+      showSnackBar('Berhasil download nota');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PDFScreen(path: file.path),
+        ),
+      );
+    });
+  }
+  void showSnackBar(message) {
+    final snackBarContent = SnackBar(
+      behavior: SnackBarBehavior.floating,
+      content: Text("${message}"),
+      action: SnackBarAction(
+          label: 'Tutup', onPressed: _scaffoldKey.currentState!.hideCurrentSnackBar),
+    );
+    _scaffoldKey.currentState!.showSnackBar(snackBarContent);
   }
   dynamic parseDate(date){
     DateTime parseDate =

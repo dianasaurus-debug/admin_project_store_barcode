@@ -163,18 +163,8 @@ class RecommendationState extends State<Recommendation> {
                                                     IconButton(
                                                         icon: Icon(Icons.shopping_cart,
                                                             color: kPrimaryLightColor),
-                                                        onPressed: () {
-                                                          print(products.data![index]);
-                                                          if(products.data![index].is_in_cart==true){
-                                                            Navigator.push(
-                                                              context,
-                                                              new MaterialPageRoute(
-                                                                  builder: (context) => CartRecommendationPage()
-                                                              ),
-                                                            );
-                                                          } else {
+                                                        onPressed: () {                                                         
                                                             _add_to_cart(products.data![index].id);
-                                                          }
                                                         }
                                                     )
                                                   ]

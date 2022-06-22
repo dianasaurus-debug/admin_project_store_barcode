@@ -8,7 +8,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/screens/cart.dart';
+import 'package:ghulam_app/screens/detail_after_scan.dart';
 import 'package:ghulam_app/screens/login_index.dart';
+import 'package:ghulam_app/screens/product_detail.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
@@ -25,6 +27,7 @@ class _ScanPageState extends State<ScanPage> {
   final _formKey = GlobalKey<FormState>();
   Barcode? result;
   QRViewController? controller;
+
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   var array_of_kode_barang = [];
@@ -67,6 +70,10 @@ class _ScanPageState extends State<ScanPage> {
   // }
   @override
   Widget build(BuildContext context) {
+    if(controller != null && mounted) {
+      controller!.pauseCamera();
+      controller!.resumeCamera();
+    }
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -220,6 +227,7 @@ class _ScanPageState extends State<ScanPage> {
     );
   }
   Widget _buildQrView(BuildContext context) {
+
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
     var scanArea = (MediaQuery.of(context).size.width < 400 ||
         MediaQuery.of(context).size.height < 400)
@@ -249,26 +257,12 @@ class _ScanPageState extends State<ScanPage> {
         result = scanData;
       });
       if(result!=null){
-        controller.pauseCamera();
-        print(result);
-        setState(() {
-          array_of_kode_barang.add(result);
-        });
-          // controller.pauseCamera();
-        //   Navigator.of(context).push(MaterialPageRoute(
-        //     builder: (context) => CartPage(),
-        //   ));
-        // // if(widget.kodeBarang!=result!.code){
-        // //   controller.pauseCamera();
-        // //   showAlertDialog(context);
-        // // } else {
-        // //   controller.pauseCamera();
-        // //   Navigator.of(context).push(MaterialPageRoute(
-        // //     builder: (context) => ProductDetail(kodeBarang : result!.code),
-        // //   ));
-        // // }
-        showSnackBar('Barang berhasil ditambahkan ke daftar!');
-        print(array_of_kode_barang);
+          print(result!.code);
+          controller.pauseCamera();
+          showSnackBar('Barang berhasil discan!');
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => DetailAfterScan(kodeBarang : result!.code),
+          ));
       }
     });
   }

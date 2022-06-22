@@ -8,11 +8,13 @@ import 'package:ghulam_app/models/user.dart';
 import 'package:ghulam_app/screens/about.dart';
 import 'package:ghulam_app/screens/edit_profile.dart';
 import 'package:ghulam_app/screens/faq.dart';
+import 'package:ghulam_app/screens/forgot_password.dart';
 import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/second_app_bar.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 
@@ -43,17 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void logout() async {
-    var res = await AuthController().postData({}, '/logout');
-    var body = json.decode(res.body);
-    print(body);
-    if (body['success']) {
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      localStorage.remove('user');
-      localStorage.remove('token');
-      Get.to(LoginIndexPage());
-    } else {}
-  }
+
 
   final List<Widget> listMenu = [
     ListTile(
@@ -104,7 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
   ];
   final List<Widget> listPages = [
     EditProfile(),
-    AboutPage(),
+    PasswordUpdate(),
     BantuanPage(),
     AboutPage()
   ];
@@ -371,5 +363,52 @@ class _ProfilePageState extends State<ProfilePage> {
             )),
       bottomNavigationBar: BottomNavbar(current: 3),
     );
+  }
+  void logout() async {
+    var res = await AuthController().postData({}, '/logout');
+    var body = json.decode(res.body);
+    print(body);
+    if (body['success']) {
+
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      localStorage.remove('user');
+      localStorage.remove('token');
+      Alert(
+        context: context,
+        type: AlertType.success,
+        title: "Berhasil!",
+        desc: "Anda telah keluar dari akun.",
+        buttons: [
+          DialogButton(
+            child: Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () =>  Navigator.push(
+              context,
+              new MaterialPageRoute(builder: (context) => LoginIndexPage()),
+            ),
+            width: 120,
+          )
+        ],
+      ).show();
+    } else {
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal logout!",
+        desc: "Err ${body['message']}",
+        buttons: [
+          DialogButton(
+            child: Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
   }
 }

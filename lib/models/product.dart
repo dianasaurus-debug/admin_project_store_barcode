@@ -33,7 +33,7 @@ class Product {
         total = json['pivot'] != null ? json['pivot']['total'] : null,
         jumlah = json['pivot'] != null ? json['pivot']['jumlah'] : null,
         nama_kategori = json['category'] == null ? null : json['category']['nama_kategori'],
-        rating = json['criterias'][1]['nilai'],
+        rating = json['criterias'].length>1 ? json['criterias'][1]['nilai'] : 0,
         qr_code = json['qr_code'];
 
   Map<String, dynamic> toJson() => {

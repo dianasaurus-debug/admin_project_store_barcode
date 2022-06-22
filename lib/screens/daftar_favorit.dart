@@ -1,10 +1,13 @@
 // import 'package:darurat_app/login_pemilik_kos.dart';
 // import 'package:darurat_app/register_pemilik_kos.dart';
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart';
+import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/models/wishlist.dart';
@@ -12,6 +15,7 @@ import 'package:ghulam_app/screens/detail_screen.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/second_app_bar.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
@@ -127,6 +131,12 @@ class FavoritPageState extends State<FavoritPage> {
                                                     FontWeight.bold)),
 
                                           ]),
+                                      trailing : TextButton(
+                                        child : Text('Hapus', style : TextStyle(color : Colors.red)),
+                                        onPressed:  (){
+                                          remove(snapshot.data![index].id);
+                                        },
+                                      )
                                       ),
                                 ),
                               ),
@@ -152,5 +162,31 @@ class FavoritPageState extends State<FavoritPage> {
                 })],
           ))
     );
+  }
+  void remove(id) async {
+    var res = await AuthController().getData('/wishlist/remove/${id}');
+    var body = json.decode(res.body);
+    print(body);
+    if (body['success']) {
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (BuildContext context) => super.widget));
+    } else {
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Gagal!",
+        desc: body['message'],
+        buttons: [
+          DialogButton(
+            child: const Text(
+              "OK",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+            width: 120,
+          )
+        ],
+      ).show();
+    }
   }
 }

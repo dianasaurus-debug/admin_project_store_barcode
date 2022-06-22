@@ -15,6 +15,7 @@ import 'package:ghulam_app/utils/constants.dart';
 import 'package:ghulam_app/widgets/app_bar.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/grid_product.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:intl/intl.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
@@ -580,7 +581,8 @@ class HomePageState extends State<HomePage> {
                                             ),
                                           ))
                                               .toList());
-                                    } else if (snapshot.hasError) {
+                                    }
+                                    else if (snapshot.hasError) {
                                       return Text("${snapshot.error}");
                                     }
                                     return Center(child: LinearProgressIndicator());
@@ -624,8 +626,9 @@ class HomePageState extends State<HomePage> {
                                               color: kPrimaryColor)),
                                     )))
                           ]);
-                        } else if (products.hasError) {
-                          return Text("${products.error}");
+                        }
+                        else if (products.hasError) {
+                          return Text("Eror Produk ${products.error}");
                         }
                         return Center(
                           child: Column(
@@ -654,5 +657,7 @@ class HomePageState extends State<HomePage> {
       new MaterialPageRoute(builder: (context) => Recommendation(data: data)),
     );
   }
+
+
 
 }

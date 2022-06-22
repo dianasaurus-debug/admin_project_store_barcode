@@ -104,7 +104,6 @@ class CartPageState extends State<CartPage> {
                         if(jumlah_barang.length<snapshot.data!.length){
                           setState(() {
                             jumlah_barang.add(snapshot.data![i].jumlah);
-
                           });
                           if(snapshot.data![i].is_scanned==1){
                             setState(() {
