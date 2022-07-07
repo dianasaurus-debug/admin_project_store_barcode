@@ -10,6 +10,7 @@ import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/product.dart';
 import 'package:ghulam_app/screens/cart.dart';
 import 'package:ghulam_app/screens/login_index.dart';
+import 'package:ghulam_app/screens/scan_one_product.dart';
 import 'package:ghulam_app/utils/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -170,20 +171,22 @@ class DetailPageState extends State<DetailPage> {
                   Row(
                     mainAxisAlignment : MainAxisAlignment.spaceBetween,
                     children : [
-                      Text(
-                        '${widget.product!.nama_barang}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: kPrimaryColor,
-                            fontSize: 20),
-                      ),
+                      Expanded(
+                        child :Text(
+                          '${widget.product!.nama_barang}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: kPrimaryColor,
+                              fontSize: 20),
+                        ),
+                      )
                     ]
                   ),
 
               SizedBox(height: 8),
               Row(children: [
                 RatingBarIndicator(
-                  rating: double.parse(widget.product!.rating.toString()),
+                  rating: double.parse(widget.product!.rating),
                   itemBuilder: (context, index) => Icon(
                     Icons.star,
                     color: Colors.amber,
@@ -193,7 +196,7 @@ class DetailPageState extends State<DetailPage> {
                   direction: Axis.horizontal,
                 ),
                 Text(
-                  ' (15 Ulasan)',
+                  ' (${widget.product!.reviews?.length ?? 0} Ulasan)',
                   style: TextStyle(color: Colors.black, fontSize: 15),
                 ),
               ]),
@@ -305,12 +308,83 @@ class DetailPageState extends State<DetailPage> {
                       ]
                   ),
                   SizedBox(
-                    height: 15,
+                    height: 10,
                   ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Ulasan',
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20)),
+                        Divider(),
+                        if(widget.product!.reviews?.length==null||widget.product!.reviews?.length==0)
+                          Center(
+                            child: Text('Belum ada ulasan', style: TextStyle(fontSize: 18)),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                child: Padding(
+                                    padding: const EdgeInsets.all(15.0),
+                                    child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children:[
+                                          Row(
+                                              children: [
+                                                RatingBarIndicator(
+                                                  rating: double.parse(widget.product!.reviews![index].rating),
+                                                  itemBuilder: (context,
+                                                      index) =>
+                                                      Icon(
+                                                        Icons.star,
+                                                        color: Colors
+                                                            .amber,
+                                                      ),
+                                                  itemCount: 5,
+                                                  itemSize: 15.0,
+                                                  direction: Axis.horizontal,
+                                                ),
+                                                Text(
+                                                  ' (${widget.product!.reviews![index].rating})',
+                                                  style: TextStyle(
+                                                      color:
+                                                      Colors.black,
+                                                      fontWeight : FontWeight.bold,
+                                                      fontSize: 15),
+                                                ),
+                                              ]
+                                          ),
+                                          Text(widget.product!.reviews![index].comment, style: TextStyle(fontSize: 15)),
 
+                                        ]
+                                    )
+                                ),
+                              );
+                            },
+                            itemCount: widget.product!.reviews!.length,
+                          )
+                      ],
+                    ),
+                  ),
 
             ]))
       ]),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: kPrimaryColor,
+        onPressed: () {
+          totalBayar>0 ? _showModalBottomSheet() : showSnackBar('Jumlah harus lebih dari satu');
+        },
+        icon: Icon(Icons.attach_money),
+        label: Text("Beli"),
+      ),
+      
     );
   }
 
@@ -371,7 +445,12 @@ class DetailPageState extends State<DetailPage> {
                     Expanded(
                         child: ElevatedButton(
                             onPressed: () {
-                              totalBayar>0 ? _showModalBottomSheet() : null;
+                              Navigator.push(
+                                context,
+                                new MaterialPageRoute(
+                                    builder: (context) => ScanOneProduct(product: widget.product!, jumlah: _jumlahBarang)
+                                ),
+                              );
                             },
                             style: ElevatedButton.styleFrom(
                               primary: kPrimaryLightColor,

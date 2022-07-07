@@ -1,3 +1,5 @@
+import 'package:ghulam_app/models/review.dart';
+
 class Product {
   late String nama_barang;
   late String harga_jual;
@@ -10,14 +12,16 @@ class Product {
   late int main_category_id;
   late String nama_kategori;
   late bool is_in_cart;
-  late int rating;
+  late String rating;
   late int id;
   late int total;
   late int jumlah;
+  late List<Review>? reviews;
+
 
 
   Product({this.id = 0, this.is_in_cart = false, this.nama_barang = '',this.harga_jual = '',this.qr_code = '', this.kode_barang = ''
-    ,this.deskripsi = '', this.gambar = '',this.stok = '',this.category_id = 0,this.nama_kategori = '', this.rating = 0, this.total=0, this.jumlah=0});
+    ,this.deskripsi = '', this.gambar = '',this.stok = '',this.category_id = 0,this.nama_kategori = '', this.rating = '', this.total=0, this.jumlah=0});
 
   Product.fromJson(Map<String, dynamic> json)
       : nama_barang = json['nama_barang'],
@@ -34,7 +38,8 @@ class Product {
         jumlah = json['pivot'] != null ? json['pivot']['jumlah'] : null,
         nama_kategori = json['category'] == null ? null : json['category']['nama_kategori'],
         rating = json['criterias'].length>1 ? json['criterias'][1]['nilai'] : 0,
-        qr_code = json['qr_code'];
+        reviews = json["rating"]!= null ? (json["rating"].isEmpty ? null : List<Review>.from(json["rating"].map((x) => new Review.fromJson(x)))) : null,
+      qr_code = json['qr_code'];
 
   Map<String, dynamic> toJson() => {
     'id' : id,

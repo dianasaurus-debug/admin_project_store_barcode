@@ -4,9 +4,11 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:ghulam_app/controllers/auth_controller.dart';
 import 'package:ghulam_app/controllers/product_controller.dart';
 import 'package:ghulam_app/models/order.dart';
@@ -15,6 +17,7 @@ import 'package:ghulam_app/screens/login_index.dart';
 import 'package:ghulam_app/screens/product_detail.dart';
 import 'package:ghulam_app/screens/register_index.dart';
 import 'package:ghulam_app/utils/constants.dart';
+import 'package:ghulam_app/utils/size_config.dart';
 import 'package:ghulam_app/widgets/bottom_navbar.dart';
 import 'package:ghulam_app/widgets/download_alert.dart';
 import 'package:ghulam_app/widgets/pdf_reader.dart';
@@ -44,9 +47,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
   final _formKey = GlobalKey<FormState>();
   final formatCurrency = new NumberFormat.simpleCurrency(locale: 'id_ID');
-
+  PageController _controller = PageController();
   int isAuth = 2;
   bool authAppBar = false;
+  List<int> product_ids = [];
+  List<String> comment_review = [];
+  List<double> comment_rating = [];
+  int currentPage = 0;
+
   late Future<List<Order>> futureListOrder;
   void _checkIfLoggedIn() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
@@ -67,6 +75,38 @@ class _HistoryPageState extends State<HistoryPage> {
     // TODO: implement initState
     _checkIfLoggedIn();
     futureListOrder = ProductNetwork().allOrder();
+  }
+  Widget _indicator(bool isActive) {
+    return Container(
+      height: 10,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 150),
+        margin: EdgeInsets.symmetric(horizontal: 4.0),
+        height: isActive
+            ? 10:8.0,
+        width: isActive
+            ? 12:8.0,
+        decoration: BoxDecoration(
+          boxShadow: [
+            isActive
+                ? BoxShadow(
+              color: Color(0XFF2FB7B2).withOpacity(0.72),
+              blurRadius: 4.0,
+              spreadRadius: 1.0,
+              offset: Offset(
+                0.0,
+                0.0,
+              ),
+            )
+                : BoxShadow(
+              color: Colors.transparent,
+            )
+          ],
+          shape: BoxShape.circle,
+          color: isActive ? kPrimaryColor : Color(0XFFEAEAEA),
+        ),
+      ),
+    );
   }
 
   @override
@@ -119,7 +159,6 @@ class _HistoryPageState extends State<HistoryPage> {
                                                         FontWeight.bold))
                                               ]
                                           ),
-
                                           subtitle : Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children : [
@@ -143,36 +182,49 @@ class _HistoryPageState extends State<HistoryPage> {
 
                                                     ],
                                                   ),
-
-
                                               ]
                                           ),
-                                          trailing: snapshot.data![index].status == 1 ? ElevatedButton(
-                                              onPressed: () async {
-                                                downloadFile(context, '${API_URL}/order/nota/${snapshot.data![index].id}', 'nota.pdf');
-                                              },
-                                              style: ElevatedButton
-                                                  .styleFrom(primary: kPrimaryColor,
-                                                shape: new RoundedRectangleBorder(
-                                                  borderRadius: new BorderRadius.circular(30.0),
+                                          trailing: snapshot.data![index].status == 1 ?
+                                          PopupMenuButton(
+                                            itemBuilder: (context) {
+                                              return [
+                                                PopupMenuItem(
+                                                  value: 'Nota',
+                                                  child: Text('Nota'),
                                                 ),
-                                                padding: EdgeInsets.all(2),
-                                              ),
-                                              child: Text('Nota',
-                                                  style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                      FontWeight
-                                                          .bold))) : ElevatedButton(
+                                                PopupMenuItem(
+                                                  value: 'Nilai',
+                                                  child: Text('Nilai'),
+                                                )
+                                              ];
+                                            },
+                                            onSelected: (String value){
+                                              if(value=='Nota'){
+                                                downloadFile(context, '${API_URL}/order/nota/${snapshot.data![index].id}', 'nota.pdf');
+                                              } else {
+                                                setState(() {
+                                                  product_ids.clear();
+                                                  comment_review.clear();
+                                                  comment_rating.clear();
+                                                  currentPage = 0;
+                                                });
+                                                for(var i = 0;i<snapshot.data![index].products!.length;i++){
+                                                  setState(() {
+                                                    product_ids.add(snapshot.data![index].products![i].id);
+                                                    comment_review.add('');
+                                                    comment_rating.add(0.0);
+                                                  });
+                                                }
+                                                _addRating(snapshot.data![index]);
+                                              }
+                                            },
+                                          ) : ElevatedButton(
                                               onPressed: () {
                                                 pay(snapshot.data![index].id);
                                               },
-                                              style: ElevatedButton
-                                                  .styleFrom(
-                                                primary:
-                                                kPrimaryLightColor,
-                                                shape:
-                                                new RoundedRectangleBorder(
+                                              style: ElevatedButton.styleFrom(
+                                                primary: kPrimaryLightColor,
+                                                shape: new RoundedRectangleBorder(
                                                   borderRadius:
                                                   new BorderRadius
                                                       .circular(
@@ -211,22 +263,19 @@ class _HistoryPageState extends State<HistoryPage> {
                                 Expanded(
                                     child :ElevatedButton(
                                         onPressed: () async {
-                                          downloadFile(context, '${API_URL}/order/all/nota', 'nota_all.pdf');
+                                            downloadFile(context, '${API_URL}/order/all/nota', 'nota_all.pdf');
                                         },
-                                        style: ElevatedButton
-                                            .styleFrom(primary: kPrimaryColor,
+                                        style: ElevatedButton.styleFrom(primary: kPrimaryColor,
                                           shape: new RoundedRectangleBorder(
                                             borderRadius: new BorderRadius.circular(30.0),
                                           ),
-
                                           padding: EdgeInsets.all(3),
                                         ),
                                         child: Text('Nota Semua Transaksi',
                                             style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight:
-                                                FontWeight
-                                                    .bold)))
+                                                FontWeight.bold)))
                                 )
                               ]
                           )
@@ -363,6 +412,7 @@ class _HistoryPageState extends State<HistoryPage> {
       );
     });
   }
+
   void showSnackBar(message) {
     final snackBarContent = SnackBar(
       behavior: SnackBarBehavior.floating,
@@ -424,6 +474,231 @@ class _HistoryPageState extends State<HistoryPage> {
         ],
       ).show();
     }
+  }
+  // user defined function
+  void _addRating(Order order) {
+    List<Widget> _buildPageIndicator() {
+      List<Widget> list = [];
+      for (int j = 0; j < product_ids.length; j++) {
+        list.add(j == currentPage ? _indicator(true) : _indicator(false));
+      }
+      return list;
+    }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+          scrollable: true,
+          title: new Center(child:Text("Ulasan Anda")),
+          content:
+              Column(
+                children : [
+                  if(order.reviews==null)...[
+                    Container(
+                        width: MediaQuery.of(context).size.width*0.8,
+                        height: MediaQuery.of(context).size.height*0.25,
+                        child : PageView.builder(
+                          controller: _controller,
+                          reverse: false,
+                          scrollDirection: Axis.horizontal,
+                          onPageChanged: (int page) {
+                            setState(() {
+                              currentPage = page;
+                            });
+                          },
+                          itemCount: product_ids.length,
+                          itemBuilder: (BuildContext context, int i) {
+                            return Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text('${order.products![i].nama_barang}', style : TextStyle(fontSize: 13), textAlign: TextAlign.center,),
+                                  SizedBox(height : 2),
+                                  RatingBar.builder(
+                                      initialRating: 0,
+                                      minRating: 1,
+                                      direction: Axis.horizontal,
+                                      allowHalfRating: true,
+                                      itemCount: 5,
+                                      itemSize: 25,
+                                      itemPadding: EdgeInsets.symmetric(horizontal: 3.0),
+                                      itemBuilder: (context, _) => Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                      ),
+                                      onRatingUpdate: (val){
+                                        setState(() {
+                                          comment_rating[i] = val;
+                                        });
+                                      }
+                                  ),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  TextFormField(
+                                    maxLines: 2,
+                                    onChanged: (val){
+                                      setState(() {
+                                        comment_review[i] = val;
+                                      });
+                                    },
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: InputDecoration(
+                                      focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: kPrimaryLightColor, width: 2),
+                                      ),
+                                      enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: kPrimaryLightColor, width: 2),
+                                      ),
+                                      errorBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.red, width: 2),
+                                      ),
+                                      focusedErrorBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.red, width: 2),
+                                      ),
+                                      hintText: 'Komentar Anda..',
+                                    ),
+
+                                  ),
+                                  SizedBox(height : 10),
+                                ]);
+                          },
+                        )),
+                  ] else ... [
+                    Container(
+                        width: MediaQuery.of(context).size.width*0.8,
+                        height: MediaQuery.of(context).size.height*0.2,
+                        child : PageView.builder(
+                          controller: _controller,
+                          reverse: false,
+                          scrollDirection: Axis.horizontal,
+                          onPageChanged: (int page) {
+                            setState(() {
+                              currentPage = page;
+                            });
+                          },
+                          itemCount: order.reviews!.length,
+                          itemBuilder: (BuildContext context, int i) {
+                            return Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text('${order.reviews![i].product!.nama_barang}', style : TextStyle(fontSize: 13), textAlign: TextAlign.center,),
+                                  SizedBox(height : 2),
+                                  RatingBarIndicator(
+                                      rating: double.parse(order.reviews![i].rating),
+                                      direction: Axis.horizontal,
+                                      itemCount: 5,
+                                      itemSize: 25,
+                                      itemPadding: EdgeInsets.symmetric(horizontal: 3.0),
+                                      itemBuilder: (context, _) => Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                      ),
+
+                                  ),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text('Komentar',
+                                      style: TextStyle(
+                                          color: kPrimaryColor,
+                                          fontSize: 14,
+                                          fontWeight:
+                                          FontWeight.bold)),
+                                  SizedBox(
+                                    height: 2,
+                                  ),
+                                  Text('${order.reviews![i].comment}',
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 12)),
+                                  SizedBox(height : 10),
+                                ]);
+                          },
+                        )),
+                  ],
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children : [
+                        for (Widget indicator in _buildPageIndicator())
+                          indicator
+                      ]
+                  )
+                ]
+              ),
+          actions: <Widget>[
+            if(order.reviews==null)...[
+              new ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.red,
+                ),
+                child: new Text("Tutup"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              new ElevatedButton(
+                child: new Text("Simpan"),
+                onPressed: () async {
+                  var array_of_products = [];
+                  for(var k = 0;k<product_ids.length;k++){
+                    array_of_products.add({
+                      'product_id' : product_ids[k],
+                      'comment' : comment_review[k],
+                      'rating' : comment_rating[k]
+                    });
+                  }
+                  var data = {
+                    'products' : array_of_products,
+                    'order_id' : order.id,
+                  };
+                  var res = await AuthController().postData(data, '/order/rate');
+                  var body = json.decode(res.body);
+                  print(body);
+                  if (body['success']) {
+                    showSnackBar('Sukses memberikan rating!');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HistoryPage()),
+                    );
+
+                  } else {
+                    Alert(
+                      context: context,
+                      type: AlertType.error,
+                      title: "Gagal hapus scan produk!",
+                      desc: body['message'],
+                      buttons: [
+                        DialogButton(
+                          child: const Text(
+                            "OK",
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          width: 120,
+                        )
+                      ],
+                    ).show();
+                  }
+                },
+              ),
+            ] else ... [
+              new ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.red,
+                ),
+                child: new Text("Tutup"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+            // usually buttons at the bottom of the dialog
+
+          ],
+        );
+      },
+    );
   }
 
 }

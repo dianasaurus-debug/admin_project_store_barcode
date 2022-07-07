@@ -90,19 +90,16 @@ class ProductDetailState extends State<ProductDetail> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                            snapshot.data!.products![index]
-                                                .nama_barang,
+                                          Expanded(
+                                            child :
+                                          Text('${snapshot.data!.products![index]
+                                                .nama_barang} ${snapshot.data!.products![index].jumlah}x',
                                             style: TextStyle(
                                                 color: Colors.black,
                                                 fontWeight: FontWeight.bold),
                                           ),
-                                          Text(
-                                            '${snapshot.data!.products![index].jumlah}x',
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold),
-                                          ),
+
+                                          )
                                         ]),
                                     // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
                                     subtitle: Column(

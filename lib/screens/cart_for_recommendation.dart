@@ -615,15 +615,15 @@ class CartRecommendationPageState extends State<CartRecommendationPage> {
                                         );
                                         },
                                       style: ElevatedButton.styleFrom(
-                                        primary: Colors.blue,
+                                        primary: Colors.red,
                                         shape: new RoundedRectangleBorder(
                                           borderRadius: new BorderRadius.circular(30.0),
                                         ),
                                         padding: EdgeInsets.all(8),
                                       ),
-                                      child: Text('Sudah',
+                                      child: Text('Tidak',
                                           style: TextStyle(
-                                              fontSize: 15, fontWeight: FontWeight.bold)))
+                                              fontSize: 15, fontWeight: FontWeight.bold, color : Colors.white)))
                                 ]
                             )
                           ]

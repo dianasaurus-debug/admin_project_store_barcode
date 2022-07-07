@@ -91,6 +91,7 @@ class ProductNetwork {
     if (res.statusCode == 200) {
       var json = jsonDecode(res.body);
       List data = json['data'];
+      print(data[0]['rating'].isEmpty);
       return data.map((orders) => new Order.fromJson(orders)).toList();
     } else {
       throw Exception('Failed to fetch data');

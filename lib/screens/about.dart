@@ -34,7 +34,7 @@ class _AboutPageState extends State<AboutPage> {
               Center(
                 child : Image.asset('images/about_us.jpg')
               ),
-              Text('BeStore', style: TextStyle(fontSize : 25, fontWeight: FontWeight.bold, color : kPrimaryColor)),
+              Text('BeShop', style: TextStyle(fontSize : 25, fontWeight: FontWeight.bold, color : kPrimaryColor)),
               SizedBox(height : 15),
               Text(textAbout, style: TextStyle(fontSize : 15, color : Colors.black), textAlign: TextAlign.justify,),
             ]
